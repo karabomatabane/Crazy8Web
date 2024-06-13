@@ -2,17 +2,17 @@
 
     @if (Owner == null)
     {
-        <span>Owner: @Owner?.Name</span>
-        <div>
-            <h3 class="center">Enter player information</h3>
+        <div class="form-container center">
+            <h3 class="mb-2">Player information</h3>
             @* https://stackoverflow.com/questions/77125142/blazor-server-protectedsessionstorage-setasync-returns-task-cancled-exception-wh *@
             <div class="form">
                 <div class="form-group">
-                    <label for="Name">Your name</label>
-                    <input type="text" class="form-control" id="Name" @bind="_inputName"/>
-                    <button class="btn btn-primary me-2" @onclick="CreatePlayer" 
-                           >Save
-                    </button>
+                    <p>
+                        <MatTextField @bind-Value="@_inputName" Label="Name" Id="playerName" Outlined="true"></MatTextField>
+                    </p>
+                    <MatButton Outlined="true" class="mt-2" Disabled="@string.IsNullOrEmpty(_inputName)" 
+                               @onclick="CreatePlayer">Save
+                    </MatButton>
                 </div>
             </div>
         </div>   
@@ -29,6 +29,9 @@
 
             <button class="btn btn-secondary" @onclick="StartGame">
                 Join Game
+            </button>
+            <button class="btn btn-tertiary" @onclick="ChangeName">
+                Change Name
             </button>
         </div>
 

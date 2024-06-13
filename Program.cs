@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Crazy8Web.Data;
 using Crazy8Web.Hubs;
 using Crazy8Web.Services;
+using MatBlazor;
 using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor().AddHubOptions(options => { options.MaximumReceiveMessageSize = 500 * 1024; });
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddSignalR();
+builder.Services.AddMatBlazor();
 builder.Services.AddResponseCompression(opts =>
 {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });

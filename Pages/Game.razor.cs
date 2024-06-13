@@ -76,6 +76,12 @@ public partial class Game : ComponentBase
         await SessionStore.SetAsync(OwnerKey, Owner);
     }
 
+    private void ChangeName()
+    {
+        Owner = null;
+        StateHasChanged();
+    }
+
     public async ValueTask DisposeAsync()
     {
         await _hubConnection.DisposeAsync();
