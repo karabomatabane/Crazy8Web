@@ -12,7 +12,7 @@ public class Player
     }
 
     public string PlayerId { get; set; }
-    private string Name { get; set; }
+    public string Name { get; set; }
     public Card[]? Hand { get; set; }
 
     public Card? PlayCard()

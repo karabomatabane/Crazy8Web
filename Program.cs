@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddServerSideBlazor().AddHubOptions(options => { options.MaximumReceiveMessageSize = 500 * 1024; });
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddSignalR();
 builder.Services.AddResponseCompression(opts =>

@@ -1,17 +1,39 @@
 ﻿<div class="container">
-    <h3 class="center">Select what you want to do</h3>
 
-    <div class="center">
-        <button class="btn btn-primary me-2" @onclick="StartGame">
-            Create Game
-        </button>
+    @if (Owner == null)
+    {
+        <span>Owner: @Owner?.Name</span>
+        <div>
+            <h3 class="center">Enter player information</h3>
+            @* https://stackoverflow.com/questions/77125142/blazor-server-protectedsessionstorage-setasync-returns-task-cancled-exception-wh *@
+            <div class="form">
+                <div class="form-group">
+                    <label for="Name">Your name</label>
+                    <input type="text" class="form-control" id="Name" @bind="_inputName"/>
+                    <button class="btn btn-primary me-2" @onclick="CreatePlayer" 
+                           >Save
+                    </button>
+                </div>
+            </div>
+        </div>   
+    }
+    else
+    {
+        <h3 class="center">Hi @Owner.Name,</h3>
+        <h3 class="center">What you want do want to do?</h3>
 
-        <button class="btn btn-secondary" @onclick="StartGame">
-            Join Game
-        </button>
-    </div>
+        <div class="center">
+            <button class="btn btn-primary me-2" @onclick="StartGame">
+                Create Game
+            </button>
 
-    <div id="game-board">
-        <!-- Game UI goes here -->
-    </div>
+            <button class="btn btn-secondary" @onclick="StartGame">
+                Join Game
+            </button>
+        </div>
+
+        <div id="game-board">
+            <!-- Game UI goes here -->
+        </div>
+    }
 </div>
