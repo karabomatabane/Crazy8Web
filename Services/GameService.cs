@@ -8,28 +8,11 @@ namespace Crazy8Web.Services;
 public class GameService
 {
     private readonly IHubContext<GameHub> _hubContext;
-    private readonly Game _game;
+    private Game _game;
 
     public GameService(IHubContext<GameHub> hubContext)
     {
         _hubContext = hubContext;
-        Player[] players = new[]
-        {
-            new Player("Tshiamo"), new Player("Karabo"), new Player("Oratile"), 
-            new Player("Fentse"),
-            new Player("Thabi")
-        };
-
-        Dictionary<string, IEffect?> specialCards = new()
-        {
-            { "7", new JumpEffect() }, { "8", new CallEffect() }, { "Jack", new ReverseEffect() }
-        };
-        
-        _game = new Game(players, specialCards);
-
-        // Subscribe to game events
-        _game.FaceUpCardChanged += OnFaceUpCardChanged;
-        _game.PlayerTurnChanged += OnPlayerTurnChanged;
     }
     
     private async void OnFaceUpCardChanged(Card card)
@@ -43,10 +26,29 @@ public class GameService
         // Notify clients about the player's turn
         await _hubContext.Clients.All.SendAsync("PlayerTurn", playerId);
     }
+
+    public void CreateGame(Player owner)
+    {
+        Dictionary<string, IEffect?> specialCards = new()
+        {
+            { "7", new JumpEffect() }, { "8", new CallEffect() }, { "Jack", new ReverseEffect() }
+        };
+        
+        _game = new Game(owner, specialCards);
+        
+        // Subscribe to game events
+        _game.FaceUpCardChanged += OnFaceUpCardChanged;
+        _game.PlayerTurnChanged += OnPlayerTurnChanged;
+    }
     
     public void StartGame()
     {
         _game.StartGame();
+    }
+
+    public void JoinGame(Player player, string gameId)
+    {
+        // TODO: add player to player's list
     }
 
     public void ProgressGame(Card? playerChoice)

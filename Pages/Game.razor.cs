@@ -62,9 +62,17 @@ public partial class Game : ComponentBase
         }
     }
 
-    private void StartGame()
+    private void JoinGame()
     {
-        GameService.StartGame();
+        // TODO: Use game id to add player to a game
+        if (Owner == null) return;
+        GameService.JoinGame(Owner, "");
+    }
+
+    private void CreateGame()
+    {
+        if (Owner == null) return;
+        GameService.CreateGame(Owner);
     }
 
     private async Task CreatePlayer()

@@ -8,6 +8,7 @@ public class Game
     public event Action<string>? PlayerTurnChanged;
     public string GameId { get; private set; }
     private Player[] Players { get; set; }
+    public string Owner { get; set; }
     private Deck Deck { get; set; }
     private int Round { get; set; }
     private int TotalRounds { get; }
@@ -20,10 +21,10 @@ public class Game
     private Dictionary<string, IEffect?> SpecialCards { get; set; }
     public string? RequiredSuit { get; set; }
 
-    public Game(Player[] players, Dictionary<string, IEffect?> specialCards)
+    public Game(Player owner, Dictionary<string, IEffect?> specialCards)
     {
         GameId = Guid.NewGuid().ToString();
-        Players = players;
+        Players = new[] { owner };
         SpecialCards = specialCards;
         Deck = new Deck();
         Round = 0;
@@ -35,6 +36,7 @@ public class Game
 
     public void StartGame(int round = 1)
     {
+        if (Players.Length < 2) return;
         if (round > 1)
         {
             Players = Bench.ToArray();
