@@ -10,33 +10,42 @@
                     <p>
                         <MatTextField @bind-Value="@_inputName" Label="Name" Id="playerName" Outlined="true"></MatTextField>
                     </p>
-                    <MatButton Outlined="true" class="mt-2" Disabled="@string.IsNullOrEmpty(_inputName)" 
-                               @onclick="CreatePlayer">Save
+                    <MatButton Outlined="true" class="mt-2" Disabled="@string.IsNullOrEmpty(_inputName)"
+                               @onclick="CreatePlayer">
+                        Save
                     </MatButton>
                 </div>
             </div>
-        </div>   
+        </div>
+    }
+    else if (!_isGameRunning)
+    {
+        <MatH3 class="center">Hi @Owner.Name,</MatH3>
+        <MatH3 class="center mb-2">What you want do want to do?</MatH3>
+
+        <div class="center mt-2">
+            <MatButton Outlined="true" class="btn btn-primary me-2" @onclick="CreateGame">
+                Create Game
+            </MatButton>
+
+            <MatButton Outlined="true" class="btn btn-secondary" @onclick="JoinGame">
+                Join Game
+            </MatButton>
+            <MatButton Outlined="true" class="btn btn-tertiary" @onclick="ChangeName">
+                Change Name
+            </MatButton>
+        </div>
     }
     else
     {
-        <h3 class="center">Hi @Owner.Name,</h3>
-        <h3 class="center">What you want do want to do?</h3>
-
-        <div class="center">
-            <button class="btn btn-primary me-2" @onclick="CreateGame">
-                Create Game
-            </button>
-
-            <button class="btn btn-secondary" @onclick="JoinGame">
-                Join Game
-            </button>
-            <button class="btn btn-tertiary" @onclick="ChangeName">
-                Change Name
-            </button>
-        </div>
-
-        <div id="game-board">
+        <div id="game-board" class="center">
             <!-- Game UI goes here -->
+            <MatH3>You have created a game</MatH3>
+            <MatH4>Copy the link below to invite others</MatH4>
+            <p>
+                <MatTextField @bind-Value="@_gameId" Label="Code" Outlined="true" Disabled="true" Style="width: 340px;"></MatTextField>
+                <MatButton>Copy</MatButton>
+            </p>
         </div>
     }
 </div>

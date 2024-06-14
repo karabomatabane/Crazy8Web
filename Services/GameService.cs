@@ -40,13 +40,17 @@ public class GameService
         _game.FaceUpCardChanged += OnFaceUpCardChanged;
         _game.PlayerTurnChanged += OnPlayerTurnChanged;
     }
+
+    public bool IsGameRunning(string ownerId) => _game.Owner == ownerId;
+
+    public string GetGameId() => _game.GameId;
     
     public void StartGame()
     {
         _game.StartGame();
     }
 
-    public void JoinGame(Player player, string gameId)
+    public void JoinGame(Player player, string gameId)                                                      
     {
         // TODO: add player to player's list
     }

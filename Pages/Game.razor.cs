@@ -20,6 +20,8 @@ public partial class Game : ComponentBase
     private Player? Owner { get; set; }
     private static string? _inputName;
     private const string OwnerKey = "owner";
+    private static bool _isGameRunning = false;
+    private static string? _gameId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -39,26 +41,26 @@ public partial class Game : ComponentBase
         });
 
         await _hubConnection.StartAsync();
+
+        await LoadOwnerFromSessionAsync();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task LoadOwnerFromSessionAsync()
     {
-        if (firstRender)
+        try
         {
-            try
+            var result = await SessionStore.GetAsync<Player>(OwnerKey);
+            Owner = result.Value;
+            if (Owner != null)
             {
-                ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(OwnerKey);
-                Owner = result.Value;
-                if (Owner != null)
-                {
-                    StateHasChanged();
-                }
+                _isGameRunning = GameService.IsGameRunning(Owner.PlayerId);
+                _gameId = GameService.GetGameId();
+                StateHasChanged(); // Force re-render to update UI
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
     }
 
@@ -73,6 +75,9 @@ public partial class Game : ComponentBase
     {
         if (Owner == null) return;
         GameService.CreateGame(Owner);
+        _isGameRunning = true;
+        _gameId = GameService.GetGameId();
+        StateHasChanged();
     }
 
     private async Task CreatePlayer()

@@ -25,6 +25,7 @@ public class Game
     {
         GameId = Guid.NewGuid().ToString();
         Players = new[] { owner };
+        Owner = owner.PlayerId;
         SpecialCards = specialCards;
         Deck = new Deck();
         Round = 0;
