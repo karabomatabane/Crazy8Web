@@ -1,5 +1,6 @@
 ﻿using Crazy8.Contracts;
 using Crazy8.Models;
+using Crazy8Web.Constants;
 using Crazy8Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
@@ -41,7 +42,7 @@ public class GameService
         _game.PlayerTurnChanged += OnPlayerTurnChanged;
     }
 
-    public bool IsGameRunning(string ownerId) => _game.Owner == ownerId;
+    public bool IsGameRunning(string ownerId) => _game?.Owner == ownerId;
 
     public string GetGameId() => _game.GameId;
     
@@ -50,9 +51,14 @@ public class GameService
         _game.StartGame();
     }
 
-    public void JoinGame(Player player, string gameId)                                                      
+    public void JoinGame(Player player, string gameId)
     {
-        // TODO: add player to player's list
+        if (_game == null)
+        {
+            throw new InvalidOperationException("Game does not exist or has not been created yet.");
+        }
+
+        _hubContext.Clients.All.SendAsync(Const.JoinedKey, player);
     }
 
     public void ProgressGame(Card? playerChoice)

@@ -1,0 +1,11 @@
+﻿@page "/join/{playerId}"
+<h3>JoinPage</h3>
+<div id="game-board" class="center">
+    <!-- Game UI goes here -->
+    <MatH3>Join a game</MatH3>
+    <MatH4>Enter game code below</MatH4>
+    <p>
+        <MatTextField @bind-Value="@_joiningId" Label="Code" Outlined="true" Style="width: 340px;"></MatTextField>
+        <MatButton OnClick="JoinGame">Join</MatButton>
+    </p>
+</div>

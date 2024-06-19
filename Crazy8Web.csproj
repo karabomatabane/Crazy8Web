@@ -19,6 +19,7 @@
       <PackageReference Include="Blazor.Bootstrap" Version="3.0.0-preview.1" />
       <PackageReference Include="MatBlazor" Version="2.10.0" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="7.0.0" />
+      <PackageReference Include="TextCopy" Version="6.2.1" />
     </ItemGroup>
 
 </Project>

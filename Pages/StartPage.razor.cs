@@ -1,31 +1,27 @@
-﻿using Crazy8Web.Constants;
-using Crazy8.Models;
+﻿using Crazy8.Models;
 using Crazy8Web.Services;
 using MatBlazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
-using Microsoft.JSInterop;
 using Microsoft.AspNetCore.SignalR.Client;
-using TextCopy;
+using Microsoft.JSInterop;
 
 namespace Crazy8Web.Pages;
 
-public partial class Game : ComponentBase
+public partial class StartPage : ComponentBase
 {
     [Inject] private GameService GameService { get; set; }
     [Inject] private IJSRuntime JSRuntime { get; set; }
     [Inject] private NavigationManager NavigationManager { get; set; }
+
     [Inject] private ProtectedSessionStorage SessionStore { get; set; }
     [Inject] protected IMatToaster Toaster { get; set; }
 
     private HubConnection _hubConnection;
     private Player? Owner { get; set; }
     private static string? _inputName;
-    private static bool _isGameRunning = false;
-    private static string? _gameId;
-    private static string? _joiningId;
-    private static bool _hasJoined = false;
-
+    private const string OwnerKey = "owner";
+    
     protected override async Task OnInitializedAsync()
     {
         _hubConnection = new HubConnectionBuilder()
@@ -47,17 +43,15 @@ public partial class Game : ComponentBase
 
         await LoadOwnerFromSessionAsync();
     }
-
+    
     private async Task LoadOwnerFromSessionAsync()
     {
         try
         {
-            var result = await SessionStore.GetAsync<Player>(Const.OwnerKey);
+            var result = await SessionStore.GetAsync<Player>(OwnerKey);
             Owner = result.Value;
             if (Owner != null)
             {
-                _isGameRunning = GameService.IsGameRunning(Owner.PlayerId);
-                _gameId = GameService.GetGameId();
                 StateHasChanged(); // Force re-render to update UI
             }
         }
@@ -66,28 +60,19 @@ public partial class Game : ComponentBase
             Console.WriteLine(e);
         }
     }
-
     private void PrepareToJoin()
     {
         // TODO: Use game id to add player to a game
         if (Owner == null) return;
-        _hasJoined = true;
-        StateHasChanged();
+        NavigationManager.NavigateTo($"/join/{Owner.PlayerId}");
     }
-
-    private void JoinGame()
-    {
-        if (Owner == null || string.IsNullOrEmpty(_joiningId)) return;
-        GameService.JoinGame(Owner, _joiningId);
-    }
+    
 
     private void CreateGame()
     {
         if (Owner == null) return;
         GameService.CreateGame(Owner);
-        _isGameRunning = true;
-        _gameId = GameService.GetGameId();
-        StateHasChanged();
+        NavigationManager.NavigateTo($"lobby/{Owner.PlayerId}");
     }
 
     private async Task CreatePlayer()
@@ -96,7 +81,7 @@ public partial class Game : ComponentBase
         if (string.IsNullOrEmpty(_inputName)) return;
         await SessionStore.SetAsync("test", "This is a test");
         Owner = new Player(_inputName);
-        await SessionStore.SetAsync(Const.OwnerKey, Owner);
+        await SessionStore.SetAsync(OwnerKey, Owner);
     }
 
     private void ChangeName()
@@ -109,11 +94,7 @@ public partial class Game : ComponentBase
     {
         await _hubConnection.DisposeAsync();
     }
+    
 
-    private async Task CopyToClip()
-    {
-        if (string.IsNullOrEmpty(_gameId)) return;
-        await ClipboardService.SetTextAsync(_gameId);
-        Toaster.Add("Code copied to clipboard!", MatToastType.Success);
-    }
+
 }

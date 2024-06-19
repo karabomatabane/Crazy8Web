@@ -119,6 +119,14 @@ public class Game
         Console.Clear();
     }
 
+    public void AddPlayer(Player player)
+    {
+        Player[] players = Players;
+        Array.Resize(ref players, players.Length + 1);
+        players[^1] = player;
+        Players = players;
+    }
+
     public Card? GetFaceUp()
     {
         return Deck.FaceUp.Count > 0 ? Deck.FaceUp[^1] : null;

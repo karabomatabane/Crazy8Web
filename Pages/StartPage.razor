@@ -1,4 +1,4 @@
-﻿@page "/main/{text}"
+﻿@page "/start"
 <div class="container">
 
     @if (Owner == null)
@@ -17,29 +17,6 @@
                     </MatButton>
                 </div>
             </div>
-        </div>
-    }
-    else if (GameService.IsGameRunning(Owner.PlayerId ?? ""))
-    {
-        <div id="game-board" class="center">
-            <!-- Game UI goes here -->
-            <MatH3>You have created a game</MatH3>
-            <MatH4>Copy the link below to invite others</MatH4>
-            <p>
-                <MatTextField @bind-Value="@_gameId" Label="Code" Outlined="true" Disabled="true" Style="width: 340px;"></MatTextField>
-                <MatButton OnClick="CopyToClip">Copy</MatButton>
-            </p>
-        </div>
-    } else if (_hasJoined)
-    {
-        <div id="game-board" class="center">
-            <!-- Game UI goes here -->
-            <MatH3>Join a game</MatH3>
-            <MatH4>Enter game code below</MatH4>
-            <p>
-                <MatTextField @bind-Value="@_joiningId" Label="Code" Outlined="true" Style="width: 340px;"></MatTextField>
-                <MatButton OnClick="JoinGame">Join</MatButton>
-            </p>
         </div>
     }
     else
