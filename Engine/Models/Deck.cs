@@ -6,7 +6,7 @@ public class Deck
 {
     private List<Card> FaceDown { get; set; }
     public List<Card> FaceUp { get; set; }
-    private static Random random = new Random(); 
+    private static readonly Random Random = new Random(); 
 
     public Deck(int size = 52)
     {
@@ -27,7 +27,7 @@ public class Deck
         int n = FaceDown.Count;
         while (n > 1) {  
             n--;  
-            int k = random.Next(n + 1);  
+            int k = Random.Next(n + 1);  
             // val at pos n becomes value at pos n and vice-versa
             (FaceDown[k], FaceDown[n]) = (FaceDown[n], FaceDown[k]);
         }

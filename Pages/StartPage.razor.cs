@@ -72,7 +72,8 @@ public partial class StartPage : ComponentBase
     {
         if (Owner == null) return;
         GameService.CreateGame(Owner);
-        NavigationManager.NavigateTo($"lobby/{Owner.PlayerId}");
+        GameService.JoinGame(Owner, GameService.GetGameId());
+        NavigationManager.NavigateTo($"lobby/{GameService.GetGameId()}");
     }
 
     private async Task CreatePlayer()

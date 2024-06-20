@@ -1,3 +1,29 @@
-﻿@page "/lobby/{ownerId?}"
-<h3>LobbyPage</h3>
-<p class="text">You are @OwnerId</p>
+﻿@page "/lobby/{gameId?}"
+<div class="center">
+    <!-- Game UI goes here -->
+    <MatH3>@( _isMine ? "You have created a game" : "You joined the game")</MatH3>
+    
+    @if (_isMine)
+    {
+        <MatH4>Copy the link below to invite others</MatH4>
+        <p>
+            <MatTextField @bind-Value="@GameId" Label="Code" Outlined="true" Disabled="true" Style="width: 340px;"></MatTextField>
+            <MatButton OnClick="CopyToClip">Copy</MatButton>
+        </p>
+    }
+
+    @if (true)
+    {
+        <MatH4>Players Joined</MatH4>
+        <table class="table table-responsive">
+            @foreach (Player player in _players.Where(player => player.PlayerId != Owner?.PlayerId))
+            {
+                <tr>
+                    <td>@player.Name</td>
+                </tr>
+            }
+        </table>
+        <MatButton OnClick="Start">@(_isMine ? "Start" : "Ready")</MatButton>
+    }
+
+</div>

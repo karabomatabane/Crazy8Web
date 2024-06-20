@@ -53,13 +53,15 @@ public class GameService
 
     public void JoinGame(Player player, string gameId)
     {
-        if (_game == null)
+        if (_game == null || gameId != _game.GameId)
         {
             throw new InvalidOperationException("Game does not exist or has not been created yet.");
         }
 
         _hubContext.Clients.All.SendAsync(Const.JoinedKey, player);
     }
+
+    public bool IsMine(string playerId) => _game.Owner == playerId;
 
     public void ProgressGame(Card? playerChoice)
     {
