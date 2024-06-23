@@ -127,6 +127,11 @@ public class Game
         Players = players;
     }
 
+    public Player[] GetPlayers()
+    {
+        return Players;
+    }
+
     public Card? GetFaceUp()
     {
         return Deck.FaceUp.Count > 0 ? Deck.FaceUp[^1] : null;

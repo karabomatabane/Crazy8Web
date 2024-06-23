@@ -29,4 +29,14 @@ public class GameHub : Hub
         _gameService.JoinGame(player, gameId);
         await Clients.All.SendAsync(Const.JoinedKey, player);
     }
+
+    public async Task PlayerReady()
+    {
+        await Clients.All.SendAsync(Const.PlayerReady);
+    }
+
+    public async Task StartSession()
+    {
+        await Clients.All.SendAsync(Const.StartSession);
+    }
 }

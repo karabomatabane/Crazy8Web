@@ -57,8 +57,29 @@ public class GameService
         {
             throw new InvalidOperationException("Game does not exist or has not been created yet.");
         }
-
+        _game.AddPlayer(player);
         _hubContext.Clients.All.SendAsync(Const.JoinedKey, player);
+    }
+
+    public Player[] GetPlayers()
+    {
+        return _game.GetPlayers();
+    }
+
+    public List<Player> GetOtherPlayers(Player player)
+    {
+        List<Player> players = _game.GetPlayers().Where(p => p.PlayerId != player.PlayerId).ToList();
+        return players;
+    }
+
+    public void PlayerReady()
+    {
+        _hubContext.Clients.All.SendAsync(Const.PlayerReady);
+    }
+
+    public void StartSession()
+    {
+        _hubContext.Clients.All.SendAsync(Const.StartSession);
     }
 
     public bool IsMine(string playerId) => _game.Owner == playerId;

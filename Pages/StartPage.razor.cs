@@ -72,7 +72,6 @@ public partial class StartPage : ComponentBase
     {
         if (Owner == null) return;
         GameService.CreateGame(Owner);
-        GameService.JoinGame(Owner, GameService.GetGameId());
         NavigationManager.NavigateTo($"lobby/{GameService.GetGameId()}");
     }
 

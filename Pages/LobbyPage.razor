@@ -12,18 +12,30 @@
         </p>
     }
 
-    @if (true)
+    @if (_players?.Count > 0)
     {
         <MatH4>Players Joined</MatH4>
+
+
         <table class="table table-responsive">
-            @foreach (Player player in _players.Where(player => player.PlayerId != Owner?.PlayerId))
+            @foreach (Player player in _players)
             {
                 <tr>
                     <td>@player.Name</td>
                 </tr>
             }
         </table>
-        <MatButton OnClick="Start">@(_isMine ? "Start" : "Ready")</MatButton>
+        if (_isMine)
+        {
+            <MatButton Outlined="true" Disabled="_ready < _players.Count" class="btn btn-primary me-2" OnClick="Start">
+                Start
+            </MatButton>
+        }
+        else
+        {
+            <MatButton Outlined="true" class="btn btn-primary me-2"
+                       OnClick="Start">Ready</MatButton>
+        }
     }
 
 </div>

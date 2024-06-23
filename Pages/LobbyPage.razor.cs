@@ -20,6 +20,7 @@ public partial class LobbyPage : ComponentBase
     [Inject] private ProtectedSessionStorage SessionStore { get; set; }
     [Inject] private GameService GameService { get; set; }
     private Player? Owner { get; set; }
+    private int _ready = 0;
     [Inject] protected IMatToaster Toaster { get; set; }
     private List<Player>? _players;
     private bool _isMine = false;
@@ -37,8 +38,17 @@ public partial class LobbyPage : ComponentBase
                 {
                     throw new Exception("We can't retrieve user information. Please start again.");
                 }
-                _players?.Add(player);
+
+                _players = GameService.GetOtherPlayers(Owner);
                 _isMine = GameService.IsMine(Owner.PlayerId);
+                StateHasChanged();
+            });
+        });
+        _hubConnection.On(Const.PlayerReady, async () =>
+        {
+            await InvokeAsync(() =>
+            {
+                _ready++;
                 StateHasChanged();
             });
         });
@@ -48,7 +58,7 @@ public partial class LobbyPage : ComponentBase
         {
             throw new Exception("We can't retrieve user information. Please start again.");
         }
-        _players = new List<Player>();
+        _players = GameService.GetOtherPlayers(Owner);
         _isMine = GameService.IsMine(Owner.PlayerId);
     }
     
@@ -71,9 +81,15 @@ public partial class LobbyPage : ComponentBase
 
     private void Start()
     {
-        // TODO: implement game start session.
+        if (_isMine)
+        {
+            GameService.StartSession();
+        }
+        else
+        {
+            GameService.PlayerReady();
+        }
     }
-
 
     private async Task CopyToClip()
     {
