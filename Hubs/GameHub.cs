@@ -30,9 +30,9 @@ public class GameHub : Hub
         await Clients.All.SendAsync(Const.JoinedKey, player);
     }
 
-    public async Task PlayerReady()
+    public async Task PlayerReady(string playerId)
     {
-        await Clients.All.SendAsync(Const.PlayerReady);
+        await Clients.All.SendAsync(Const.PlayerReady, playerId);
     }
 
     public async Task StartSession()

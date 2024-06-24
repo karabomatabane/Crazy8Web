@@ -20,7 +20,7 @@ public partial class LobbyPage : ComponentBase
     [Inject] private ProtectedSessionStorage SessionStore { get; set; }
     [Inject] private GameService GameService { get; set; }
     private Player? Owner { get; set; }
-    private int _ready = 0;
+    private List<string> readyPlayers;
     [Inject] protected IMatToaster Toaster { get; set; }
     private List<Player>? _players;
     private bool _isMine = false;
@@ -44,11 +44,11 @@ public partial class LobbyPage : ComponentBase
                 StateHasChanged();
             });
         });
-        _hubConnection.On(Const.PlayerReady, async () =>
+        _hubConnection.On<string>(Const.PlayerReady, async (playerId) =>
         {
             await InvokeAsync(() =>
             {
-                _ready++;
+                readyPlayers = GameService.GetReadyPlayers();
                 StateHasChanged();
             });
         });
@@ -60,6 +60,7 @@ public partial class LobbyPage : ComponentBase
         }
         _players = GameService.GetOtherPlayers(Owner);
         _isMine = GameService.IsMine(Owner.PlayerId);
+        readyPlayers = GameService.GetReadyPlayers();
     }
     
     private async Task LoadOwnerFromSessionAsync()
@@ -81,13 +82,15 @@ public partial class LobbyPage : ComponentBase
 
     private void Start()
     {
+        if (Owner == null)
+            return;
         if (_isMine)
         {
             GameService.StartSession();
         }
         else
         {
-            GameService.PlayerReady();
+            GameService.PlayerReady(Owner.PlayerId);
         }
     }
 
@@ -97,6 +100,8 @@ public partial class LobbyPage : ComponentBase
         await ClipboardService.SetTextAsync(GameId);
         Toaster.Add("Code copied to clipboard!", MatToastType.Success);
     }
+
+    private bool IsOwner(string playerId) => GameService.GetOwnerId() == playerId;
     
     public async ValueTask DisposeAsync()
     {

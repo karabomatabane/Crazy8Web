@@ -18,6 +18,7 @@ public partial class JoinPage : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        _joiningId = string.Empty;
         await LoadOwnerFromSessionAsync();
     }
     

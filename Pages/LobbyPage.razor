@@ -17,17 +17,35 @@
         <MatH4>Players Joined</MatH4>
 
 
-        <table class="table table-responsive">
+        <table class="table table-responsive w-25 center">
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Ready</th>
+            </tr>
+            </thead>
             @foreach (Player player in _players)
             {
-                <tr>
+                <tr scope="row">
                     <td>@player.Name</td>
+                    @if (readyPlayers.Contains(player.PlayerId) || IsOwner(player.PlayerId))
+                    {
+                        <td>
+                            <MatIcon Icon="check_circle" Style="color: #4caf50"></MatIcon>
+                        </td>
+                    }
+                    else
+                    {
+                        <td>
+                            <MatIcon Icon="check_circle_outline" Style="color: #4caf50"></MatIcon>
+                        </td>
+                    }
                 </tr>
             }
         </table>
         if (_isMine)
         {
-            <MatButton Outlined="true" Disabled="_ready < _players.Count" class="btn btn-primary me-2" OnClick="Start">
+            <MatButton Outlined="true" Disabled="readyPlayers.Count < _players.Count" class="btn btn-primary me-2" OnClick="Start">
                 Start
             </MatButton>
         }

@@ -10,10 +10,12 @@ public class GameService
 {
     private readonly IHubContext<GameHub> _hubContext;
     private Game _game;
+    private List<string> readyPlayers;
 
     public GameService(IHubContext<GameHub> hubContext)
     {
         _hubContext = hubContext;
+        readyPlayers = new List<string>();
     }
     
     private async void OnFaceUpCardChanged(Card card)
@@ -72,15 +74,20 @@ public class GameService
         return players;
     }
 
-    public void PlayerReady()
+    public List<string> GetReadyPlayers() => readyPlayers;
+
+    public void PlayerReady(string playerId)
     {
-        _hubContext.Clients.All.SendAsync(Const.PlayerReady);
+        readyPlayers.Add(playerId);
+        _hubContext.Clients.All.SendAsync(Const.PlayerReady, playerId);
     }
 
     public void StartSession()
     {
         _hubContext.Clients.All.SendAsync(Const.StartSession);
     }
+
+    public string GetOwnerId() => _game.Owner;
 
     public bool IsMine(string playerId) => _game.Owner == playerId;
 

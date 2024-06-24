@@ -38,9 +38,9 @@ public partial class StartPage : ComponentBase
             // Update UI with current player's turn
             JSRuntime.InvokeVoidAsync("alert", $"It's {playerId}'s turn");
         });
+        _inputName = string.Empty;
 
         await _hubConnection.StartAsync();
-
         await LoadOwnerFromSessionAsync();
     }
     
