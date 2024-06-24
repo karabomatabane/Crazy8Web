@@ -17,12 +17,12 @@ public class GameHub : Hub
 
     public async Task ShowFaceUp(Card card)
     {
-        await Clients.All.SendAsync("FaceUp", card);
+        await Clients.All.SendAsync(Const.FaceUp, card);
     }
 
     public async Task ShowTurn(string playerId)
     {
-        await Clients.All.SendAsync("PlayerTurn", playerId);
+        await Clients.All.SendAsync(Const.PlayerTurn, playerId);
     }
     public async Task JoinGame(Player player, string gameId)
     {

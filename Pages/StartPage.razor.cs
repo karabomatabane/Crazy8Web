@@ -27,17 +27,6 @@ public partial class StartPage : ComponentBase
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(NavigationManager.ToAbsoluteUri("/gameHub"))
             .Build();
-        _hubConnection.On<Card>("FaceUp", (card) =>
-        {
-            // Update UI with face-up card
-            JSRuntime.InvokeVoidAsync("alert", $"Face up card: {card.Rank} of {card.Suit}");
-        });
-
-        _hubConnection.On<string>("PlayerTurn", (playerId) =>
-        {
-            // Update UI with current player's turn
-            JSRuntime.InvokeVoidAsync("alert", $"It's {playerId}'s turn");
-        });
         _inputName = string.Empty;
 
         await _hubConnection.StartAsync();

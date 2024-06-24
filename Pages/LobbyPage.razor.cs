@@ -52,6 +52,10 @@ public partial class LobbyPage : ComponentBase
                 StateHasChanged();
             });
         });
+        _hubConnection.On(Const.StartSession, () =>
+        {
+            NavigationManager.NavigateTo("/board");
+        });
         await _hubConnection.StartAsync();
         await LoadOwnerFromSessionAsync();
         if (Owner == null)

@@ -21,13 +21,13 @@ public class GameService
     private async void OnFaceUpCardChanged(Card card)
     {
         // Notify clients about the face-up card
-        await _hubContext.Clients.All.SendAsync("FaceUp", card);
+        await _hubContext.Clients.All.SendAsync(Const.FaceUp, card);
     }
 
     private async void OnPlayerTurnChanged(string playerId)
     {
         // Notify clients about the player's turn
-        await _hubContext.Clients.All.SendAsync("PlayerTurn", playerId);
+        await _hubContext.Clients.All.SendAsync(Const.PlayerTurn, playerId);
     }
 
     public void CreateGame(Player owner)
@@ -44,7 +44,7 @@ public class GameService
         _game.PlayerTurnChanged += OnPlayerTurnChanged;
     }
 
-    public bool IsGameRunning(string ownerId) => _game?.Owner == ownerId;
+    public bool IsGameRunning() => _game.IsRunning;
 
     public string GetGameId() => _game.GameId;
     
@@ -85,6 +85,18 @@ public class GameService
     public void StartSession()
     {
         _hubContext.Clients.All.SendAsync(Const.StartSession);
+    }
+
+    public Card[]? GetPlayerCards(string playerId)
+    {
+        Player[] players = _game.GetPlayers();
+        Player? player = players.FirstOrDefault(p => p.PlayerId == playerId); 
+        if (player != null)
+        {
+            return player.Hand;
+        }
+
+        return null;
     }
 
     public string GetOwnerId() => _game.Owner;

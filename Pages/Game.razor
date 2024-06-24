@@ -1,63 +1,52 @@
-﻿@page "/main/{text}"
+﻿@page "/board"
 <div class="container">
-
-    @if (Owner == null)
+    @if (_players != null && Owner != null)
     {
-        <div class="form-container center">
-            <h3 class="mb-2">Player information</h3>
-            @* https://stackoverflow.com/questions/77125142/blazor-server-protectedsessionstorage-setasync-returns-task-cancled-exception-wh *@
-            <div class="form">
-                <div class="form-group">
-                    <p>
-                        <MatTextField @bind-Value="@_inputName" Label="Name" Id="playerName" Outlined="true"></MatTextField>
-                    </p>
-                    <MatButton Outlined="true" class="mt-2" Disabled="@string.IsNullOrEmpty(_inputName)"
-                               @onclick="CreatePlayer">
-                        Save
-                    </MatButton>
+        <MatChipSet>
+            @foreach (Player player in _players)
+            {
+                <MatChip Label="@GetPlayerName(player)" LeadingIcon="person"
+                         Style="@(player == _turn ? "background-color:#4caf50" : "background-color: #e0e0e0")">
+                </MatChip>
+            }
+        </MatChipSet>
+        <MatCard class="demo-mat-card">
+            <MatCardContent>
+                <div class="demo-mat-card-content">
+                    <MatHeadline6 class="demo-mat-card-clean-margin">
+                        Face Up Card
+                    </MatHeadline6>
                 </div>
-            </div>
-        </div>
-    }
-    else if (GameService.IsGameRunning(Owner.PlayerId ?? ""))
-    {
-        <div id="game-board" class="center">
-            <!-- Game UI goes here -->
-            <MatH3>You have created a game</MatH3>
-            <MatH4>Copy the link below to invite others</MatH4>
-            <p>
-                <MatTextField @bind-Value="@_gameId" Label="Code" Outlined="true" Disabled="true" Style="width: 340px;"></MatTextField>
-                <MatButton OnClick="CopyToClip">Copy</MatButton>
-            </p>
-        </div>
-    } else if (_hasJoined)
-    {
-        <div id="game-board" class="center">
-            <!-- Game UI goes here -->
-            <MatH3>Join a game</MatH3>
-            <MatH4>Enter game code below</MatH4>
-            <p>
-                <MatTextField @bind-Value="@_joiningId" Label="Code" Outlined="true" Style="width: 340px;"></MatTextField>
-                <MatButton OnClick="JoinGame">Join</MatButton>
-            </p>
-        </div>
-    }
-    else
-    {
-        <MatH3 class="center">Hi @Owner.Name,</MatH3>
-        <MatH3 class="center mb-2">What you want do want to do?</MatH3>
 
-        <div class="center mt-2">
-            <MatButton Outlined="true" class="btn btn-primary me-2" @onclick="CreateGame">
-                Create Game
-            </MatButton>
+                <MatBody2 class="demo-mat-card-content demo-mat-card-clean-margin">
+                    @_faceUp?.Rank of @_faceUp?.Suit
+                </MatBody2>
+            </MatCardContent>
+        </MatCard>
+        @if (_myCards != null)
+        {
+            <MatCard class="demo-mat-card">
+                <MatCardContent>
+                    <div class="demo-mat-card-content">
+                        <MatHeadline6 class="demo-mat-card-clean-margin">
+                            Your Hand
+                        </MatHeadline6>
+                    </div>
 
-            <MatButton Outlined="true" class="btn btn-secondary" @onclick="PrepareToJoin">
-                Join Game
-            </MatButton>
-            <MatButton Outlined="true" class="btn btn-tertiary" @onclick="ChangeName">
-                Change Name
-            </MatButton>
-        </div>
+                    @foreach (Card card in _myCards)
+                    {
+                        <MatBody2 class="demo-mat-card-content demo-mat-card-clean-margin">@card?.Rank of @card?.Suit</MatBody2>
+                    }
+                </MatCardContent>
+            </MatCard>
+            <MatSelect Label="Pick a Food Group" @bind-Value="@_choice">
+                @for (int i = 0; i < _myCards.Length; i++)
+                {
+                    int index = i;
+                    <MatOption TValue="int" Value="@i">@_myCards[index].Rank of @_myCards[index].Suit</MatOption>
+                }
+            </MatSelect>
+            <MatButton Outlined="true" OnClick="PlayChoice" Disabled="!IsMyTurn()">Play</MatButton>
+        }   
     }
 </div>

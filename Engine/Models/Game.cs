@@ -20,6 +20,7 @@ public class Game
     private List<Player> Out { get; set; }
     private Dictionary<string, IEffect?> SpecialCards { get; set; }
     public string? RequiredSuit { get; set; }
+    public bool IsRunning { get; set; }
 
     public Game(Player owner, Dictionary<string, IEffect?> specialCards)
     {
@@ -37,6 +38,7 @@ public class Game
 
     public void StartGame(int round = 1)
     {
+        IsRunning = true;
         if (Players.Length < 2) return;
         if (round > 1)
         {
@@ -51,7 +53,7 @@ public class Game
             Card? card = GetFaceUp();
             if (card == null)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                // Console.ForegroundColor = ConsoleColor.Red;
                 throw new Exception("You shouldn't be here without a card!\nPanic!!!");
             }
             if (SpecialCards.TryGetValue(card.Rank, out IEffect? effect) && effect != null)
@@ -80,7 +82,7 @@ public class Game
         {
             currentPlayer.PickCards(Deck, 1);
             SetNext();
-            Console.Clear();
+            // Console.Clear();
             return;
         }
 
@@ -116,7 +118,6 @@ public class Game
                 StartGame(Round);
             }
         }
-        Console.Clear();
     }
 
     public void AddPlayer(Player player)
@@ -139,13 +140,14 @@ public class Game
 
     private void EndGame()
     {
-        Console.WriteLine($"THE GAME HAS ENDED!\nWINNER: {Players[0]}");
-        for (int i = 0; i < Out.Count; i++)
-        {
-            Console.WriteLine($"Rank: {i + 2} => {Out[i]}");
-        }
-
-        Console.WriteLine("THANK YOU FOR PLAYING!!");
+        IsRunning = false;
+        // Console.WriteLine($"THE GAME HAS ENDED!\nWINNER: {Players[0]}");
+        // for (int i = 0; i < Out.Count; i++)
+        // {
+        //     Console.WriteLine($"Rank: {i + 2} => {Out[i]}");
+        // }
+        //
+        // Console.WriteLine("THANK YOU FOR PLAYING!!");
     }
 
     private void DealCards(int count)

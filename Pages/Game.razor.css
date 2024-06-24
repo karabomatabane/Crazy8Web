@@ -1,8 +1,11 @@
-﻿.form-container {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #f9f9f9;
+﻿.demo-mat-card {
+    max-width: 400px;
+}
+
+.demo-mat-card-content {
+    padding: 1rem !important;
+}
+
+.demo-mat-card-clean-margin {
+    margin: 0;
 }

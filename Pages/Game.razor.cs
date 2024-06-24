@@ -17,47 +17,65 @@ public partial class Game : ComponentBase
     [Inject] private NavigationManager NavigationManager { get; set; }
     [Inject] private ProtectedSessionStorage SessionStore { get; set; }
     [Inject] protected IMatToaster Toaster { get; set; }
-
-    private HubConnection _hubConnection;
     private Player? Owner { get; set; }
-    private static string? _inputName;
-    private static bool _isGameRunning = false;
-    private static string? _gameId;
-    private static string? _joiningId;
-    private static bool _hasJoined = false;
+    
+    private HubConnection _hubConnection;
+    private Player? _turn;
+    private Card? _faceUp;
+    private List<Player> _players = new();
+    private Card[] _myCards = Array.Empty<Card>();
+    private int _choice = 0;
 
     protected override async Task OnInitializedAsync()
     {
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(NavigationManager.ToAbsoluteUri("/gameHub"))
             .Build();
-        _hubConnection.On<Card>("FaceUp", (card) =>
+        _hubConnection.On<Card>(Const.FaceUp, async (card) =>
         {
             // Update UI with face-up card
-            JSRuntime.InvokeVoidAsync("alert", $"Face up card: {card.Rank} of {card.Suit}");
+            await InvokeAsync((() =>
+            {
+                _players = GameService.GetPlayers().ToList();
+                _faceUp = card;
+                StateHasChanged();
+            }));
         });
 
-        _hubConnection.On<string>("PlayerTurn", (playerId) =>
+        _hubConnection.On<string>(Const.PlayerTurn, async (playerId) =>
         {
             // Update UI with current player's turn
-            JSRuntime.InvokeVoidAsync("alert", $"It's {playerId}'s turn");
+            await InvokeAsync((() =>
+            {
+                _players = GameService.GetPlayers().ToList();
+                _turn = _players?.FirstOrDefault(p => p.PlayerId == playerId);
+                StateHasChanged();
+            }));
         });
 
         await _hubConnection.StartAsync();
-
         await LoadOwnerFromSessionAsync();
+        if (!GameService.IsGameRunning())
+        {
+            GameService.StartGame();
+        }
+        _players = GameService.GetPlayers().ToList();
+        if (Owner == null)
+        {
+            _myCards = Array.Empty<Card>();
+            return;
+        }
+        _myCards = GameService.GetPlayerCards(Owner.PlayerId);
     }
 
     private async Task LoadOwnerFromSessionAsync()
     {
         try
         {
-            var result = await SessionStore.GetAsync<Player>(Const.OwnerKey);
+            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(Const.OwnerKey);
             Owner = result.Value;
             if (Owner != null)
             {
-                _isGameRunning = GameService.IsGameRunning(Owner.PlayerId);
-                _gameId = GameService.GetGameId();
                 StateHasChanged(); // Force re-render to update UI
             }
         }
@@ -67,53 +85,32 @@ public partial class Game : ComponentBase
         }
     }
 
-    private void PrepareToJoin()
+    private string GetPlayerName(Player player)
     {
-        // TODO: Use game id to add player to a game
-        if (Owner == null) return;
-        _hasJoined = true;
-        StateHasChanged();
+        if (Owner != null)
+        {
+            return player.PlayerId == Owner.PlayerId ? "You" : player.Name;
+        }
+
+        return "";
     }
 
-    private void JoinGame()
+    private bool IsMyTurn()
     {
-        if (Owner == null || string.IsNullOrEmpty(_joiningId)) return;
-        GameService.JoinGame(Owner, _joiningId);
-    }
+        if (Owner != null && _turn != null)
+            return _turn.PlayerId == Owner.PlayerId;
+        return false;
+    } 
 
-    private void CreateGame()
+    private void PlayChoice()
     {
-        if (Owner == null) return;
-        GameService.CreateGame(Owner);
-        _isGameRunning = true;
-        _gameId = GameService.GetGameId();
-        StateHasChanged();
-    }
-
-    private async Task CreatePlayer()
-    {
-        Console.WriteLine(_inputName);
-        if (string.IsNullOrEmpty(_inputName)) return;
-        await SessionStore.SetAsync("test", "This is a test");
-        Owner = new Player(_inputName);
-        await SessionStore.SetAsync(Const.OwnerKey, Owner);
-    }
-
-    private void ChangeName()
-    {
-        Owner = null;
-        StateHasChanged();
+        if (_myCards == null)
+            return;
+        GameService.ProgressGame(_myCards[_choice]);
     }
 
     public async ValueTask DisposeAsync()
     {
         await _hubConnection.DisposeAsync();
-    }
-
-    private async Task CopyToClip()
-    {
-        if (string.IsNullOrEmpty(_gameId)) return;
-        await ClipboardService.SetTextAsync(_gameId);
-        Toaster.Add("Code copied to clipboard!", MatToastType.Success);
     }
 }
