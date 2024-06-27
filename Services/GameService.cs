@@ -11,6 +11,7 @@ public class GameService
     private readonly IHubContext<GameHub> _hubContext;
     private Game _game;
     private List<string> readyPlayers;
+    private TaskCompletionSource<string>? _suitSelectionCompletionSource;
 
     public GameService(IHubContext<GameHub> hubContext)
     {
@@ -42,6 +43,24 @@ public class GameService
         // Subscribe to game events
         _game.FaceUpCardChanged += OnFaceUpCardChanged;
         _game.PlayerTurnChanged += OnPlayerTurnChanged;
+        CallEffect.SuitPrompted += OnSuitPrompted;
+    }
+
+    private Task<string> OnSuitPrompted(string defaultSuit)
+    {
+        _suitSelectionCompletionSource = new TaskCompletionSource<string>();
+        _hubContext.Clients.All.SendAsync("PromptSuit", defaultSuit);
+        // wait for user to select suit
+        return _suitSelectionCompletionSource.Task;
+    }
+    
+    public async void ReceiveSuitSelection(string selectedSuit)
+    {
+        if (_suitSelectionCompletionSource != null)
+        {
+            _suitSelectionCompletionSource.SetResult(selectedSuit);
+            _suitSelectionCompletionSource = null;
+        }
     }
 
     public bool IsGameRunning() => _game.IsRunning;
@@ -87,16 +106,16 @@ public class GameService
         _hubContext.Clients.All.SendAsync(Const.StartSession);
     }
 
-    public Card[]? GetPlayerCards(string playerId)
+    public Card[] GetPlayerCards(string playerId)
     {
         Player[] players = _game.GetPlayers();
         Player? player = players.FirstOrDefault(p => p.PlayerId == playerId); 
         if (player != null)
         {
-            return player.Hand;
+            return player.Hand ?? Array.Empty<Card>();
         }
 
-        return null;
+        return Array.Empty<Card>();
     }
 
     public string GetOwnerId() => _game.Owner;
@@ -107,4 +126,7 @@ public class GameService
     {
         _game.ProgressGame(playerChoice);
     }
+
+    public Card? GetFaceUp() => _game.GetFaceUp();
+    public int GetTurn() => _game.Turn;
 }

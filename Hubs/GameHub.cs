@@ -39,4 +39,9 @@ public class GameHub : Hub
     {
         await Clients.All.SendAsync(Const.StartSession);
     }
+    
+    public async Task PromptSuit()
+    {
+        await Clients.All.SendAsync(Const.PromptSuit);
+    }
 }

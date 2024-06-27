@@ -8,4 +8,6 @@ public static class Const
     public static readonly string JoinedKey = "PlayerJoined";
     public static readonly string PlayerReady = "PlayerReady";
     public static readonly string PlayerTurn = "PlayerTurn";
+    public static readonly string ReceiveSuit = "ReceiveSuitSelection";
+    public static readonly string PromptSuit = "PromptSuit";
 }

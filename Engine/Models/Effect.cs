@@ -27,10 +27,15 @@ public class CallEffect : IEffect
 {
     public EffectFrequency Frequency => EffectFrequency.SingleTurn;
     public bool Immune => true;
+    // Define an event to prompt the player for a suit
+    public static event Func<string, Task<string>>? SuitPrompted;
 
-    public void Execute(Game game)
+    public async void Execute(Game game)
     {
-        game.RequiredSuit = PromptPlayerForSuit(game.GetFaceUp()!.Suit);
+        if (SuitPrompted != null)
+        {
+            game.RequiredSuit = await SuitPrompted.Invoke(game.GetFaceUp()!.Suit);
+        }
     }
 
     private string PromptPlayerForSuit(string defaultSuit)

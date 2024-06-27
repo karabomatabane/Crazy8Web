@@ -49,8 +49,21 @@ public partial class Game : ComponentBase
             {
                 _players = GameService.GetPlayers().ToList();
                 _turn = _players?.FirstOrDefault(p => p.PlayerId == playerId);
+                if (Owner != null)
+                    _myCards = GameService.GetPlayerCards(Owner.PlayerId);
                 StateHasChanged();
             }));
+        });
+        
+        _hubConnection.On<string>(Const.PromptSuit, async (defaultSuit) =>
+        {
+            string selectedSuit = await PromptPlayerForSuit(defaultSuit);
+            await _hubConnection.SendAsync(methodName: Const.ReceiveSuit, arg1: selectedSuit);
+        });
+
+        _hubConnection.On<string>(Const.ReceiveSuit, suit =>
+        {
+            GameService.ReceiveSuitSelection(suit);
         });
 
         await _hubConnection.StartAsync();
@@ -66,6 +79,8 @@ public partial class Game : ComponentBase
             return;
         }
         _myCards = GameService.GetPlayerCards(Owner.PlayerId);
+        _faceUp = GameService.GetFaceUp();
+        _turn = _players[GameService.GetTurn()];
     }
 
     private async Task LoadOwnerFromSessionAsync()
@@ -84,6 +99,16 @@ public partial class Game : ComponentBase
             Console.WriteLine(e);
         }
     }
+    
+    private async Task<string> PromptPlayerForSuit(string defaultSuit)
+    {
+        // Implement a UI prompt to select a suit and return the selected suit
+        // This can be a modal or any UI interaction in Blazor
+        // For now, we will return a default suit to simulate
+        await Task.Delay(1000); // Simulate user interaction delay
+        return "Hearts"; // Replace with actual suit selection logic
+    }
+
 
     private string GetPlayerName(Player player)
     {

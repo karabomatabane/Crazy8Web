@@ -12,7 +12,7 @@ public class Game
     private Deck Deck { get; set; }
     private int Round { get; set; }
     private int TotalRounds { get; }
-    private int Turn { get; set; }
+    public int Turn { get; private set; }
     public int Step { get; set; } = 1; // default step is 1 
     public bool Clockwise { get; set; } = true; // default direction is clockwise
     private List<IEffect?> ActiveEffects { get; set; } // list of active effects
@@ -45,6 +45,7 @@ public class Game
             Players = Bench.ToArray();
             Bench = new List<Player>();
         }
+
         Deck.Shuffle();
         DealCards(5);
         while (true)
@@ -56,6 +57,7 @@ public class Game
                 // Console.ForegroundColor = ConsoleColor.Red;
                 throw new Exception("You shouldn't be here without a card!\nPanic!!!");
             }
+
             if (SpecialCards.TryGetValue(card.Rank, out IEffect? effect) && effect != null)
             {
                 Deck.Reset();
@@ -63,10 +65,11 @@ public class Game
             }
             else
             {
-                FaceUpCardChanged?.Invoke(card);
+                NotifyFaceUp(card);
                 break;
             }
         }
+
         Round = round;
         NotifyPlayerTurn();
     }
@@ -93,15 +96,24 @@ public class Game
                                Immune: true
                            }) || // immune special
                            RequiredSuit == playerChoice.Suit || // matches required
-                           string.IsNullOrEmpty(RequiredSuit) && (playerChoice.Suit == faceUp.Suit || playerChoice.Rank //matches face up
-            == faceUp.Rank);
+                           string.IsNullOrEmpty(RequiredSuit) && (playerChoice.Suit == faceUp.Suit ||
+                                                                  playerChoice.Rank //matches face up
+                                                                  == faceUp.Rank);
         if (!isValidMove)
         {
             currentPlayer.PickCards(Deck, 2);
         }
         else if (!string.IsNullOrEmpty(RequiredSuit)) RequiredSuit = string.Empty;
-        Deck.AddCard(playerChoice);
-        ApplySpecialCard(playerChoice.Rank);
+        if (isValidMove)
+        {
+            Deck.AddCard(playerChoice);
+            if (currentPlayer.Hand == null)
+                return;// TODO: handle exception
+            Card[] playerCards = currentPlayer.Hand.Where(card => card != playerChoice).ToArray();
+            Players[Turn].Hand = playerCards;
+            ApplySpecialCard(playerChoice.Rank);
+            NotifyFaceUp();
+        }
         SetNext();
         if (!currentPlayer.HasCards())
         {
@@ -162,7 +174,7 @@ public class Game
     {
         if (!SpecialCards.TryGetValue(cardRank, out IEffect? effect) || effect == null) return;
         effect.Execute(this);
-            
+
         // Add effect to active effects if not single-turn
         if (effect.Frequency != EffectFrequency.SingleTurn)
         {
@@ -173,23 +185,37 @@ public class Game
     private void SetNext()
     {
         int n = Players.Length - 1;
-        if (Clockwise)
+        if (n == 1)
         {
-            Turn = (Turn + Step + n) % n;
+            // Toggle between 0 and 1 if there are exactly two players
+            Turn = Turn == 0 ? 1 : 0;
         }
         else
         {
-            Turn = (Turn + n - Step) % n;
+            if (Clockwise)
+            {
+                Turn = (Turn + Step + n) % n;
+            }
+            else
+            {
+                Turn = (Turn + n - Step) % n;
+            }
         }
-        
+
+
         // reset to default
         Step = 1;
         NotifyPlayerTurn();
     }
-    
+
     private void NotifyPlayerTurn()
     {
         string currentPlayerId = Players[Turn].PlayerId;
         PlayerTurnChanged?.Invoke(currentPlayerId);
+    }
+
+    private void NotifyFaceUp(Card? card = null)
+    {
+        FaceUpCardChanged?.Invoke(card ?? GetFaceUp() ?? new Card(){Rank = "Unknown", Suit = "Unknown"});
     }
 }
