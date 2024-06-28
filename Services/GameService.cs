@@ -49,7 +49,7 @@ public class GameService
     private Task<string> OnSuitPrompted(string defaultSuit)
     {
         _suitSelectionCompletionSource = new TaskCompletionSource<string>();
-        _hubContext.Clients.All.SendAsync("PromptSuit", defaultSuit);
+        _hubContext.Clients.All.SendAsync(Const.PromptSuit, defaultSuit);
         // wait for user to select suit
         return _suitSelectionCompletionSource.Task;
     }

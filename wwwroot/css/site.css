@@ -4,6 +4,21 @@
 
 html, body {
     font-family: "Montserrat", sans-serif !important;
+    background: url("../assets/pattern1.jpg");
+    background-size: cover;
+}
+
+.light-text {
+    color:  #cbccce !important;
+}
+
+.form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
 }
 
 h1:focus {

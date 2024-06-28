@@ -9,3 +9,17 @@
 .demo-mat-card-clean-margin {
     margin: 0;
 }
+
+.card img {
+    height: 175px;
+    width: 125px;
+    margin: 1px;
+}
+
+.card {
+    display: flex;
+    flex-direction: row; /* Change from column to row */
+    align-items: center; /* Align items vertically centered */
+    justify-content: center; /* Center the cards horizontally */
+    gap: 10px; /* Add some space between the cards */
+}

@@ -11,7 +11,7 @@
                     <p>
                         <MatTextField @bind-Value="@_inputName" Label="Name" Id="playerName" Outlined="true"></MatTextField>
                     </p>
-                    <MatButton Outlined="true" class="mt-2" Disabled="@string.IsNullOrEmpty(_inputName)"
+                    <MatButton Raised="true" class="mt-2" Disabled="@string.IsNullOrEmpty(_inputName)"
                                @onclick="CreatePlayer">
                         Save
                     </MatButton>
@@ -21,18 +21,18 @@
     }
     else
     {
-        <MatH3 class="center">Hi @Owner.Name,</MatH3>
-        <MatH3 class="center mb-2">What you want do want to do?</MatH3>
+        <MatH3 class="center light-text">Hi @Owner.Name,</MatH3>
+        <MatH3 class="center mb-2 light-text">What you want do want to do?</MatH3>
 
         <div class="center mt-2">
-            <MatButton Outlined="true" class="btn btn-primary me-2" @onclick="CreateGame">
+            <MatButton Raised="true" class="btn me-2" @onclick="CreateGame">
                 Create Game
             </MatButton>
 
-            <MatButton Outlined="true" class="btn btn-secondary" @onclick="PrepareToJoin">
+            <MatButton Raised="true" class="btn me-2" @onclick="PrepareToJoin">
                 Join Game
             </MatButton>
-            <MatButton Outlined="true" class="btn btn-tertiary" @onclick="ChangeName">
+            <MatButton Raised="true" class="btn me-2" @onclick="ChangeName">
                 Change Name
             </MatButton>
         </div>

@@ -1,5 +1,5 @@
 ﻿@page "/lobby/{gameId?}"
-<div class="center">
+<div class="form-container center">
     <!-- Game UI goes here -->
     <MatH3>@( _isMine ? "You have created a game" : "You joined the game")</MatH3>
     
@@ -45,13 +45,13 @@
         </table>
         if (_isMine)
         {
-            <MatButton Outlined="true" Disabled="readyPlayers.Count < _players.Count" class="btn btn-primary me-2" OnClick="Start">
+            <MatButton Raised="true" Disabled="readyPlayers.Count < _players.Count" class="btn me-2" OnClick="Start">
                 Start
             </MatButton>
         }
         else
         {
-            <MatButton Outlined="true" class="btn btn-primary me-2"
+            <MatButton Raised="true" class="btn btn-primary me-2"
                        OnClick="Start">Ready</MatButton>
         }
     }

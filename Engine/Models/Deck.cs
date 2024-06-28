@@ -6,7 +6,7 @@ public class Deck
 {
     private List<Card> FaceDown { get; set; }
     public List<Card> FaceUp { get; set; }
-    private static readonly Random Random = new Random(); 
+    private static readonly Random Random = new Random();
 
     public Deck(int size = 52)
     {
@@ -16,7 +16,10 @@ public class Deck
         {
             foreach (string rank in Const.Ranks)
             {
-                FaceDown.Add(new Card(){Suit = suit, Rank = rank});
+                FaceDown.Add(new Card()
+                {
+                    Suit = suit, Rank = rank, Image = $"assets/cards/{rank.ToLower()}_of_{suit.ToLower()}.png"
+                });
             }
         }
     }
@@ -25,9 +28,10 @@ public class Deck
     {
         // Fisher–Yates shuffle
         int n = FaceDown.Count;
-        while (n > 1) {  
-            n--;  
-            int k = Random.Next(n + 1);  
+        while (n > 1)
+        {
+            n--;
+            int k = Random.Next(n + 1);
             // val at pos n becomes value at pos n and vice-versa
             (FaceDown[k], FaceDown[n]) = (FaceDown[n], FaceDown[k]);
         }
@@ -41,7 +45,7 @@ public class Deck
             FaceDown.RemoveAt(0);
         }
         else
-        { 
+        {
             // take all the face up cards except the last one
             FaceDown = FaceUp.Take(FaceUp.Count - 1).ToList();
             // shuffle the deck
@@ -55,6 +59,7 @@ public class Deck
         {
             throw new Exception("You cannot have a card that already exists in the deck!\nPanic!!!");
         }
+
         FaceUp.Add(card);
     }
 

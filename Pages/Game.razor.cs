@@ -58,12 +58,7 @@ public partial class Game : ComponentBase
         _hubConnection.On<string>(Const.PromptSuit, async (defaultSuit) =>
         {
             string selectedSuit = await PromptPlayerForSuit(defaultSuit);
-            await _hubConnection.SendAsync(methodName: Const.ReceiveSuit, arg1: selectedSuit);
-        });
-
-        _hubConnection.On<string>(Const.ReceiveSuit, suit =>
-        {
-            GameService.ReceiveSuitSelection(suit);
+            GameService.ReceiveSuitSelection(selectedSuit);
         });
 
         await _hubConnection.StartAsync();

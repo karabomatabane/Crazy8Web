@@ -13,30 +13,34 @@
         <MatCard class="demo-mat-card">
             <MatCardContent>
                 <div class="demo-mat-card-content">
-                    <MatHeadline6 class="demo-mat-card-clean-margin">
-                        Face Up Card
+                    <MatHeadline6 class="demo-mat-card-clean-margin center">
+                        Table
                     </MatHeadline6>
                 </div>
 
-                <MatBody2 class="demo-mat-card-content demo-mat-card-clean-margin">
-                    @_faceUp?.Rank of @_faceUp?.Suit
-                </MatBody2>
+                <div class="card">
+                    <img src="assets/cards/back.png" alt="@_faceUp?.Rank of @_faceUp?.Suit">
+                    <img src="@_faceUp?.Image" alt="@_faceUp?.Rank of @_faceUp?.Suit">
+                </div>
             </MatCardContent>
         </MatCard>
+
         @if (_myCards != null)
         {
             <MatCard class="demo-mat-card">
                 <MatCardContent>
                     <div class="demo-mat-card-content">
-                        <MatHeadline6 class="demo-mat-card-clean-margin">
+                        <MatHeadline6 class="demo-mat-card-clean-margin center">
                             Your Hand
                         </MatHeadline6>
                     </div>
 
-                    @foreach (Card card in _myCards)
-                    {
-                        <MatBody2 class="demo-mat-card-content demo-mat-card-clean-margin">@card?.Rank of @card?.Suit</MatBody2>
-                    }
+                    <div class="card">
+                        @foreach (Card card in _myCards)
+                        {
+                            <img src="@card?.Image" alt="@card?.Rank of @card?.Suit">
+                        }
+                    </div>
                 </MatCardContent>
             </MatCard>
             <MatSelect Label="Pick a Card" @bind-Value="@_choice">
@@ -46,7 +50,7 @@
                     <MatOption TValue="int" Value="@i">@_myCards[index].Rank of @_myCards[index].Suit</MatOption>
                 }
             </MatSelect>
-            <MatButton Outlined="true" OnClick="PlayChoice" Disabled="!IsMyTurn()">Play</MatButton>
-        }   
+            <MatButton Raised="true" OnClick="PlayChoice" Disabled="!IsMyTurn()">Play</MatButton>
+        }
     }
 </div>
