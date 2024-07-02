@@ -71,7 +71,7 @@ public partial class LobbyPage : ComponentBase
     {
         try
         {
-            var result = await SessionStore.GetAsync<Player>(Const.OwnerKey);
+            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(Const.OwnerKey);
             Owner = result.Value;
             if (Owner != null)
             {

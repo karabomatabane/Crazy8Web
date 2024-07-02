@@ -25,6 +25,16 @@ public partial class Game : ComponentBase
     private List<Player> _players = new();
     private Card[] _myCards = Array.Empty<Card>();
     private int _choice = 0;
+    bool dialogIsOpen = false;
+    string? suit = null;
+    string? dialogSuit = null;
+
+    private void OkClick()
+    {
+        suit = dialogSuit;
+        dialogIsOpen = false;
+        if (suit != null) GameService.ReceiveSuitSelection(suit);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -55,11 +65,7 @@ public partial class Game : ComponentBase
             }));
         });
         
-        _hubConnection.On<string>(Const.PromptSuit, async (defaultSuit) =>
-        {
-            string selectedSuit = await PromptPlayerForSuit(defaultSuit);
-            GameService.ReceiveSuitSelection(selectedSuit);
-        });
+        _hubConnection.On<string>(Const.PromptSuit, PromptPlayerForSuit);
 
         await _hubConnection.StartAsync();
         await LoadOwnerFromSessionAsync();
@@ -95,13 +101,10 @@ public partial class Game : ComponentBase
         }
     }
     
-    private async Task<string> PromptPlayerForSuit(string defaultSuit)
+    private void PromptPlayerForSuit(string defaultSuit)
     {
-        // Implement a UI prompt to select a suit and return the selected suit
-        // This can be a modal or any UI interaction in Blazor
-        // For now, we will return a default suit to simulate
-        await Task.Delay(1000); // Simulate user interaction delay
-        return "Hearts"; // Replace with actual suit selection logic
+        dialogSuit = defaultSuit;
+        dialogIsOpen = true && IsMyTurn();
     }
 
 

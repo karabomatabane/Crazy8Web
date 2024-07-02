@@ -21,6 +21,7 @@ public class Game
     private Dictionary<string, IEffect?> SpecialCards { get; set; }
     public string? RequiredSuit { get; set; }
     public bool IsRunning { get; set; }
+    private bool pivot = false;
 
     public Game(Player owner, Dictionary<string, IEffect?> specialCards)
     {
@@ -172,8 +173,10 @@ public class Game
 
     private void ApplySpecialCard(string cardRank)
     {
+        bool directionBefore = Clockwise;
         if (!SpecialCards.TryGetValue(cardRank, out IEffect? effect) || effect == null) return;
         effect.Execute(this);
+        pivot = directionBefore != Clockwise;
 
         // Add effect to active effects if not single-turn
         if (effect.Frequency != EffectFrequency.SingleTurn)
@@ -185,13 +188,14 @@ public class Game
     private void SetNext()
     {
         int n = Players.Length - 1;
-        if (n == 1)
+        if (n == 1 && Step < 2 && !pivot)
         {
             // Toggle between 0 and 1 if there are exactly two players
             Turn = Turn == 0 ? 1 : 0;
         }
         else
         {
+            pivot = false;
             if (Clockwise)
             {
                 Turn = (Turn + Step + n) % n;

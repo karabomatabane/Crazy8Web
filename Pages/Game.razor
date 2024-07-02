@@ -53,4 +53,20 @@
             <MatButton Raised="true" OnClick="PlayChoice" Disabled="!IsMyTurn()">Play</MatButton>
         }
     }
+    <MatDialog @bind-IsOpen="@dialogIsOpen">
+        <MatDialogTitle>Crazy 8</MatDialogTitle>
+        <MatDialogContent>
+            <p>What suit do you want?</p>
+            <MatSelect TValue="string" Label="Title" bind-Value="dialogSuit">
+                <MatOptionString Value="dr">Spades</MatOptionString>
+                <MatOptionString Value="prof">Clubs</MatOptionString>
+                <MatOptionString Value="prof">Hearts</MatOptionString>
+                <MatOptionString Value="prof">Diamonds</MatOptionString>
+            </MatSelect>
+        </MatDialogContent>
+        <MatDialogActions>
+            <MatButton OnClick="@(e => { dialogIsOpen = false; })">No Thanks</MatButton>
+            <MatButton OnClick="@OkClick">OK</MatButton>
+        </MatDialogActions>
+    </MatDialog>
 </div>

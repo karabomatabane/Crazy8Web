@@ -56,11 +56,9 @@ public class GameService
     
     public async void ReceiveSuitSelection(string selectedSuit)
     {
-        if (_suitSelectionCompletionSource != null)
-        {
-            _suitSelectionCompletionSource.SetResult(selectedSuit);
-            _suitSelectionCompletionSource = null;
-        }
+        if (_suitSelectionCompletionSource == null) return;
+        _suitSelectionCompletionSource.SetResult(selectedSuit);
+        _suitSelectionCompletionSource = null;
     }
 
     public bool IsGameRunning() => _game.IsRunning;

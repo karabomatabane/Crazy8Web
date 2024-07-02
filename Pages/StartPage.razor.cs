@@ -37,7 +37,7 @@ public partial class StartPage : ComponentBase
     {
         try
         {
-            var result = await SessionStore.GetAsync<Player>(OwnerKey);
+            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(OwnerKey);
             Owner = result.Value;
             if (Owner != null)
             {
