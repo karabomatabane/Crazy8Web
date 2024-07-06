@@ -25,16 +25,10 @@ public partial class Game : ComponentBase
     private List<Player> _players = new();
     private Card[] _myCards = Array.Empty<Card>();
     private int _choice = 0;
-    bool dialogIsOpen = false;
-    string? suit = null;
-    string? dialogSuit = null;
-
-    private void OkClick()
-    {
-        suit = dialogSuit;
-        dialogIsOpen = false;
-        if (suit != null) GameService.ReceiveSuitSelection(suit);
-    }
+    private bool _dialogIsOpen = false;
+    private string? _suit = null;
+    private string? _dialogSuit = null;
+    private bool _requireSuit = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,6 +42,7 @@ public partial class Game : ComponentBase
             {
                 _players = GameService.GetPlayers().ToList();
                 _faceUp = card;
+                _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
                 StateHasChanged();
             }));
         });
@@ -59,6 +54,7 @@ public partial class Game : ComponentBase
             {
                 _players = GameService.GetPlayers().ToList();
                 _turn = _players?.FirstOrDefault(p => p.PlayerId == playerId);
+                _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
                 if (Owner != null)
                     _myCards = GameService.GetPlayerCards(Owner.PlayerId);
                 StateHasChanged();
@@ -76,11 +72,12 @@ public partial class Game : ComponentBase
         _players = GameService.GetPlayers().ToList();
         if (Owner == null)
         {
-            _myCards = Array.Empty<Card>();
+            _myCards = [];
             return;
         }
         _myCards = GameService.GetPlayerCards(Owner.PlayerId);
         _faceUp = GameService.GetFaceUp();
+        _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
         _turn = _players[GameService.GetTurn()];
     }
 
@@ -103,10 +100,16 @@ public partial class Game : ComponentBase
     
     private void PromptPlayerForSuit(string defaultSuit)
     {
-        dialogSuit = defaultSuit;
-        dialogIsOpen = true && IsMyTurn();
+        _dialogSuit = defaultSuit;
+        _dialogIsOpen = true && IsMyTurn();
     }
-
+    
+    private void OkClick()
+    {
+        _suit = _dialogSuit;
+        _dialogIsOpen = false;
+        if (_suit != null) GameService.ReceiveSuitSelection(_suit);
+    }
 
     private string GetPlayerName(Player player)
     {
@@ -130,6 +133,11 @@ public partial class Game : ComponentBase
         if (_myCards == null)
             return;
         GameService.ProgressGame(_myCards[_choice]);
+    }
+
+    private void Skip()
+    {
+        GameService.ProgressGame(null);
     }
 
     public async ValueTask DisposeAsync()

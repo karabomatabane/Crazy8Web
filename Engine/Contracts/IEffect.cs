@@ -8,9 +8,18 @@ public enum EffectFrequency
     WholeRound,
     Persistent
 }
+public enum EffectType
+{
+    Attack,
+    Transformation
+}
 public interface IEffect
 {
     EffectFrequency Frequency { get; }
+    EffectType Type { get; }
+    /// <summary>
+    /// True if card can be played on top of any card
+    /// </summary>
     bool Immune { get; }
     void Execute(Game game);
 }

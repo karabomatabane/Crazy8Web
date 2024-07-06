@@ -18,10 +18,11 @@ public class Game
     private List<IEffect?> ActiveEffects { get; set; } // list of active effects
     private List<Player> Bench { get; set; }
     private List<Player> Out { get; set; }
+    public int Attacks { get; set; }
     private Dictionary<string, IEffect?> SpecialCards { get; set; }
     public string? RequiredSuit { get; set; }
     public bool IsRunning { get; set; }
-    private bool pivot = false;
+    private bool _pivot = false;
 
     public Game(Player owner, Dictionary<string, IEffect?> specialCards)
     {
@@ -48,7 +49,7 @@ public class Game
         }
 
         Deck.Shuffle();
-        DealCards(5);
+        DealCards(["8", "7", "Jack", "2", "Joker"]);
         while (true)
         {
             Deck.TurnCard();
@@ -92,15 +93,24 @@ public class Game
 
         Card? faceUp = GetFaceUp();
         if (faceUp == null) return;
-        bool isValidMove = (SpecialCards.TryGetValue(playerChoice.Rank, out IEffect? effect) && effect is
+        bool isValidMove = (SpecialCards.TryGetValue(playerChoice.Rank, out IEffect? cardEffect) && cardEffect is
                            {
                                Immune: true
                            }) || // immune special
                            RequiredSuit == playerChoice.Suit || // matches required
-                           string.IsNullOrEmpty(RequiredSuit) && (playerChoice.Suit == faceUp.Suit ||
-                                                                  playerChoice.Rank //matches face up
-                                                                  == faceUp.Rank);
-        if (!isValidMove)
+                           string.IsNullOrEmpty(RequiredSuit) && 
+                           (playerChoice.Suit == faceUp.Suit || // matches suit
+                            playerChoice.Rank == faceUp.Rank); // matches rank
+        if (Attacks > 0)
+        {
+            if (cardEffect is not AttackEffect)
+            {
+                isValidMove = false;
+                currentPlayer.PickCards(Deck, 2 * Attacks);
+                Attacks = 0;
+            }
+        }
+        else if (!isValidMove)
         {
             currentPlayer.PickCards(Deck, 2);
         }
@@ -170,13 +180,22 @@ public class Game
             player.Hand = Deck.DealCards(count);
         }
     }
+    
+    private void DealCards(string[] ranks)
+    {
+        //TODO: find out why we dealing more cards than needed
+        foreach (Player player in Players)
+        {
+            player.Hand = Deck.DealCards(ranks);
+        }
+    }
 
     private void ApplySpecialCard(string cardRank)
     {
         bool directionBefore = Clockwise;
         if (!SpecialCards.TryGetValue(cardRank, out IEffect? effect) || effect == null) return;
         effect.Execute(this);
-        pivot = directionBefore != Clockwise;
+        _pivot = directionBefore != Clockwise;
 
         // Add effect to active effects if not single-turn
         if (effect.Frequency != EffectFrequency.SingleTurn)
@@ -187,28 +206,23 @@ public class Game
 
     private void SetNext()
     {
-        int n = Players.Length - 1;
-        if (n == 1 && Step < 2 && !pivot)
+        int n = Players.Length;
+        if (n == 2 && _pivot)
         {
-            // Toggle between 0 and 1 if there are exactly two players
-            Turn = Turn == 0 ? 1 : 0;
+            _pivot = false;
+            return;
+        }
+        if (Clockwise)
+        {
+            Turn = (Turn + Step + n) % n;
         }
         else
         {
-            pivot = false;
-            if (Clockwise)
-            {
-                Turn = (Turn + Step + n) % n;
-            }
-            else
-            {
-                Turn = (Turn + n - Step) % n;
-            }
+            Turn = (Turn + n - Step) % n;
         }
-
-
         // reset to default
         Step = 1;
+        _pivot = false;
         NotifyPlayerTurn();
     }
 

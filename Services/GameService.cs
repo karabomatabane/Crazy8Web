@@ -18,7 +18,7 @@ public class GameService
         _hubContext = hubContext;
         readyPlayers = new List<string>();
     }
-    
+
     private async void OnFaceUpCardChanged(Card card)
     {
         // Notify clients about the face-up card
@@ -35,11 +35,13 @@ public class GameService
     {
         Dictionary<string, IEffect?> specialCards = new()
         {
-            { "7", new JumpEffect() }, { "8", new CallEffect() }, { "Jack", new ReverseEffect() }
+            { "7", new JumpEffect() }, { "8", new CallEffect() }, { "Jack", new ReverseEffect() },
+            { "2", new AttackEffect() { Magnitude = 1, Immune = false } },
+            { "Joker", new AttackEffect() { Magnitude = 2, Immune = true } }
         };
-        
+
         _game = new Game(owner, specialCards);
-        
+
         // Subscribe to game events
         _game.FaceUpCardChanged += OnFaceUpCardChanged;
         _game.PlayerTurnChanged += OnPlayerTurnChanged;
@@ -53,7 +55,7 @@ public class GameService
         // wait for user to select suit
         return _suitSelectionCompletionSource.Task;
     }
-    
+
     public async void ReceiveSuitSelection(string selectedSuit)
     {
         if (_suitSelectionCompletionSource == null) return;
@@ -64,7 +66,7 @@ public class GameService
     public bool IsGameRunning() => _game.IsRunning;
 
     public string GetGameId() => _game.GameId;
-    
+
     public void StartGame()
     {
         _game.StartGame();
@@ -76,6 +78,7 @@ public class GameService
         {
             throw new InvalidOperationException("Game does not exist or has not been created yet.");
         }
+
         _game.AddPlayer(player);
         _hubContext.Clients.All.SendAsync(Const.JoinedKey, player);
     }
@@ -107,13 +110,13 @@ public class GameService
     public Card[] GetPlayerCards(string playerId)
     {
         Player[] players = _game.GetPlayers();
-        Player? player = players.FirstOrDefault(p => p.PlayerId == playerId); 
+        Player? player = players.FirstOrDefault(p => p.PlayerId == playerId);
         if (player != null)
         {
-            return player.Hand ?? Array.Empty<Card>();
+            return player.Hand ?? [];
         }
 
-        return Array.Empty<Card>();
+        return [];
     }
 
     public string GetOwnerId() => _game.Owner;
@@ -126,5 +129,6 @@ public class GameService
     }
 
     public Card? GetFaceUp() => _game.GetFaceUp();
+    public string? GetRequiredSuit() => _game.RequiredSuit;
     public int GetTurn() => _game.Turn;
 }

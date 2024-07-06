@@ -22,6 +22,14 @@ public class Deck
                 });
             }
         }
+        FaceDown.Add(new Card()
+        {
+            Suit = "Red", Rank = "Joker", Image = $"assets/cards/red_joker.png"
+        });
+        FaceDown.Add(new Card()
+        {
+            Suit = "Black", Rank = "Joker", Image = $"assets/cards/black_joker.png"
+        });
     }
 
     public void Shuffle()
@@ -62,12 +70,34 @@ public class Deck
 
         FaceUp.Add(card);
     }
-
+    
+    /// <summary>
+    /// Deal cards from deck
+    /// </summary>
+    /// <param name="count">Number of cards to deal</param>
+    /// <returns>Array of cards <see cref="Card"/></returns>
     public Card[] DealCards(int count)
     {
         Card[] cards = FaceDown.Take(count).ToArray();
         FaceDown.RemoveRange(0, count);
         return cards;
+    }
+
+    /// <summary>
+    /// Deal specific cards
+    /// </summary>
+    /// <param name="ranks">Array of ranks required</param>
+    /// <returns></returns>
+    public Card[] DealCards(string[] ranks)
+    {
+        return ranks.Select(rank => GetCard(rank)!).ToArray();
+    }
+
+    private Card? GetCard(string rank)
+    {
+        Card? card = FaceDown.FirstOrDefault(card => card.Rank == rank);
+        if (card != null) FaceDown.Remove(card);
+        return card;
     }
 
     public void Reset()
