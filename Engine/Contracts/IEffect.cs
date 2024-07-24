@@ -21,5 +21,5 @@ public interface IEffect
     /// True if card can be played on top of any card
     /// </summary>
     bool Immune { get; }
-    void Execute(Game game);
+    Task Execute(Game game);
 }

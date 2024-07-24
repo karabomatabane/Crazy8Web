@@ -29,6 +29,7 @@ public partial class Game : ComponentBase
     private string? _suit = null;
     private string? _dialogSuit = null;
     private bool _requireSuit = false;
+    private int? _tempChoice = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -54,9 +55,10 @@ public partial class Game : ComponentBase
             {
                 _players = GameService.GetPlayers().ToList();
                 _turn = _players?.FirstOrDefault(p => p.PlayerId == playerId);
-                _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
                 if (Owner != null)
                     _myCards = GameService.GetPlayerCards(Owner.PlayerId);
+                _choice = 0;
+                _tempChoice = null;
                 StateHasChanged();
             }));
         });
@@ -108,7 +110,9 @@ public partial class Game : ComponentBase
     {
         _suit = _dialogSuit;
         _dialogIsOpen = false;
-        if (_suit != null) GameService.ReceiveSuitSelection(_suit);
+        if (_suit == null) return;
+        GameService.ReceiveSuitSelection(_suit);
+        _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
     }
 
     private string GetPlayerName(Player player)
@@ -126,18 +130,30 @@ public partial class Game : ComponentBase
         if (Owner != null && _turn != null)
             return _turn.PlayerId == Owner.PlayerId;
         return false;
-    } 
+    }
 
-    private void PlayChoice()
+    private void SelectCard(int choice)
+    {
+        if (!IsMyTurn()) return;
+        if (_tempChoice == choice)
+        {
+            _choice = choice;
+            PlayChoice();
+        }
+        else
+            _tempChoice = choice;
+    }
+
+    private async void PlayChoice()
     {
         if (_myCards == null)
             return;
-        GameService.ProgressGame(_myCards[_choice]);
+        await GameService.ProgressGame(_myCards[_choice]);
     }
 
-    private void Skip()
+    private async void Skip()
     {
-        GameService.ProgressGame(null);
+        await GameService.ProgressGame(null);
     }
 
     public async ValueTask DisposeAsync()

@@ -123,9 +123,9 @@ public class GameService
 
     public bool IsMine(string playerId) => _game.Owner == playerId;
 
-    public void ProgressGame(Card? playerChoice)
+    public async Task ProgressGame(Card? playerChoice)
     {
-        _game.ProgressGame(playerChoice);
+        await _game.ProgressGame(playerChoice);
     }
 
     public Card? GetFaceUp() => _game.GetFaceUp();

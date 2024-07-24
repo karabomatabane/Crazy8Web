@@ -23,3 +23,12 @@
     justify-content: center; /* Center the cards horizontally */
     gap: 10px; /* Add some space between the cards */
 }
+
+.play-card:hover, .selected {
+    border: 3px solid limegreen;
+    border-radius: 8px;
+}
+
+.no-play:hover {
+    cursor: not-allowed !important;
+}

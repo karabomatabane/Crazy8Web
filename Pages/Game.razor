@@ -1,4 +1,5 @@
 ﻿@page "/board"
+@using Crazy8.Constants
 @using Crazy8Web.Utils
 <div class="container">
     @if (_players != null && Owner != null)
@@ -24,7 +25,7 @@
                     <img src="@_faceUp?.Image" alt="@_faceUp?.Rank of @_faceUp?.Suit">
                     @if (_requireSuit)
                     {
-                        <img src="@Utility.GetCardImage(GameService.GetRequiredSuit()!.ToLower())" 
+                        <img src="@Utility.GetCardImage(GameService.GetRequiredSuit()!.ToLower())"
                              alt="GameService.GetRequiredSuit()!">
                     }
                 </div>
@@ -42,37 +43,36 @@
                     </div>
 
                     <div class="card">
-                        @foreach (Card card in _myCards)
+                        @for (int i = 0; i < _myCards.Length; i++)
                         {
-                            <img src="@card?.Image" alt="@card?.Rank of @card?.Suit">
+                            Card card = _myCards[i];
+                            bool isSelected = _tempChoice == i;
+                            int pos = i;
+                            <img src="@card?.Image" @onclick="() => SelectCard(pos)" 
+                                 class="@(IsMyTurn() ? isSelected ? "play-card selected" : "play-card" : "no-play")" alt="@card?.Rank of @card?.Suit">
                         }
                     </div>
                 </MatCardContent>
             </MatCard>
-            <MatSelect Label="Pick a Card" @bind-Value="@_choice">
-                @for (int i = 0; i < _myCards.Length; i++)
-                {
-                    int index = i;
-                    <MatOption TValue="int" Value="@i">@_myCards[index].Rank of @_myCards[index].Suit</MatOption>
-                }
-            </MatSelect>
-            <MatButton Raised="true" OnClick="PlayChoice" Disabled="!IsMyTurn()">Play</MatButton>
-            <MatButton Raised="true" OnClick="PlayChoice" Disabled="!IsMyTurn()">Skip</MatButton>
+            @* <MatSelect Label="Pick a Card" @bind-Value="@_choice"> *@
+            @*     @for (int i = 0; i < _myCards.Length; i++) *@
+            @*     { *@
+            @*         int index = i; *@
+            @*         <MatOption TValue="int" Value="@i">@_myCards[index].Rank of @_myCards[index].Suit</MatOption> *@
+            @*     } *@
+            @* </MatSelect> *@
+            @* <MatButton Raised="true" OnClick="PlayChoice" Disabled="!IsMyTurn()">Play</MatButton> *@
+            <MatButton Raised="true" OnClick="Skip" Disabled="!IsMyTurn()">Skip</MatButton>
         }
     }
     <MatDialog @bind-IsOpen="@_dialogIsOpen">
         <MatDialogTitle>Crazy 8</MatDialogTitle>
         <MatDialogContent>
             <p>What suit do you want?</p>
-            <MatSelect TValue="string" Label="Title" bind-Value="_dialogSuit">
-                <MatOptionString Value="dr">Spades</MatOptionString>
-                <MatOptionString Value="prof">Clubs</MatOptionString>
-                <MatOptionString Value="prof">Hearts</MatOptionString>
-                <MatOptionString Value="prof">Diamonds</MatOptionString>
-            </MatSelect>
+            <MatSelectValue Label="Suit" @bind-Value="@_dialogSuit" Items="@Const.Suits" 
+                            ValueSelector=@(name=>name)></MatSelectValue>
         </MatDialogContent>
         <MatDialogActions>
-            <MatButton OnClick="@(e => { _dialogIsOpen = false; })">No Thanks</MatButton>
             <MatButton OnClick="@OkClick">OK</MatButton>
         </MatDialogActions>
     </MatDialog>
