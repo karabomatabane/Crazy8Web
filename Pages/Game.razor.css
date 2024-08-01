@@ -1,5 +1,9 @@
 ﻿.demo-mat-card {
-    max-width: 400px;
+    max-width: 1080px;
+    width: auto;
+    margin: 0 auto;
+    z-index: 2500 !important;
+    border-radius: 8px;
 }
 
 .demo-mat-card-content {
@@ -16,12 +20,43 @@
     margin: 1px;
 }
 
+.form-container {
+    width: 100% !important;
+    max-width: 560px !important;
+}
+
 .card {
     display: flex;
     flex-direction: row; /* Change from column to row */
     align-items: center; /* Align items vertically centered */
     justify-content: center; /* Center the cards horizontally */
     gap: 10px; /* Add some space between the cards */
+    z-index: 2600 !important;
+    background: transparent !important;
+    padding: 1rem 0;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.btnSkip {
+    margin: auto;
+}
+
+.desk-header {
+    background-color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+.desk-content {
+    background: #0dcaf040 !important;
+}
+
+.table-card {
+    position: relative; /* Ensure the position is relative or absolute */
 }
 
 .play-card:hover, .selected {
@@ -29,6 +64,28 @@
     border-radius: 8px;
 }
 
+.play-card {
+    transition: transform 0.5s, opacity 0.5s;
+    z-index: 3000 !important;
+}
+
+@keyframes moveToCenter {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        top: calc(20%);
+        left: 50%;
+        transform: scale(2);
+        z-index: 3000;
+    }
+}
+
+.play-card.animate {
+    animation: moveToCenter 0.5s forwards;
+}
+
 .no-play:hover {
-    cursor: not-allowed !important;
+    cursor: not-allowed;
 }

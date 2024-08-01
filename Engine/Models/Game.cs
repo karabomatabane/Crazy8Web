@@ -7,9 +7,9 @@ public class Game
     public event Action<Card>? FaceUpCardChanged;
     public event Action<string>? PlayerTurnChanged;
     public string GameId { get; private set; }
-    public Player[] Players { get; set; }
+    public Player[] Players { get; private set; }
     public string Owner { get; set; }
-    public Deck Deck { get; set; }
+    public Deck? Deck { get; set; }
     private int Round { get; set; }
     private int TotalRounds { get; }
     public int Turn { get; private set; }
@@ -30,21 +30,19 @@ public class Game
         Players = new[] { owner };
         Owner = owner.PlayerId;
         SpecialCards = specialCards;
-        Deck = new Deck();
         Round = 0;
         TotalRounds = Players.Length - 1;
         ActiveEffects = new List<IEffect?>();
         Bench = new List<Player>();
         Out = new List<Player>();
     }
-    
+
     public Game(Player[] players, Dictionary<string, IEffect?> specialCards)
     {
         GameId = Guid.NewGuid().ToString();
         Players = players;
         Owner = players[0].PlayerId;
         SpecialCards = specialCards;
-        Deck = new Deck();
         Round = 0;
         TotalRounds = Players.Length - 1;
         ActiveEffects = new List<IEffect?>();
@@ -59,22 +57,19 @@ public class Game
         if (round > 1)
         {
             Players = Bench.ToArray();
-            Bench = new List<Player>();
+            Bench = [];
         }
 
+        Deck = new Deck(54);
+
         Deck.Shuffle();
-        DealCards(5);
+        DealCards(["8", "2", "Ace", "7", "Joker"]);
         while (true)
         {
             Deck.TurnCard();
             Card? card = GetFaceUp();
-            if (card == null)
-            {
-                // Console.ForegroundColor = ConsoleColor.Red;
-                throw new Exception("You shouldn't be here without a card!\nPanic!!!");
-            }
 
-            if (SpecialCards.TryGetValue(card.Rank, out IEffect? effect) && effect != null)
+            if (card != null && SpecialCards.TryGetValue(card.Rank, out IEffect? effect) && effect != null)
             {
                 Deck.Reset();
                 Deck.Shuffle();
@@ -121,38 +116,54 @@ public class Game
         Player currentPlayer = Players[Turn];
         if (playerChoice == null)
         {
+            if (Attacks > 0)
+            {
+                currentPlayer.PickCards(Deck, 2 * Attacks);
+                Attacks = 0;
+                return true;
+            }
+
             currentPlayer.PickCards(Deck, 1);
             return true;
         }
-        
+
         Card? faceUp = GetFaceUp();
         if (faceUp == null) return false;
+        // TODO: find out why players don't get penalised if they play invalid card on top of a joker
         bool isValidMove = (SpecialCards.TryGetValue(playerChoice.Rank, out IEffect? cardEffect) && cardEffect is
                            {
                                Immune: true
                            }) || // immune special
                            RequiredSuit == playerChoice.Suit || // matches required
-                           string.IsNullOrEmpty(RequiredSuit) && 
+                           string.IsNullOrEmpty(RequiredSuit) &&
                            (playerChoice.Suit == faceUp.Suit || // matches suit
                             playerChoice.Rank == faceUp.Rank); // matches rank
         if (Attacks > 0)
         {
             if (cardEffect is not AttackEffect)
             {
-                isValidMove = false;
                 currentPlayer.PickCards(Deck, 2 * Attacks);
                 Attacks = 0;
+                return false;
             }
             else
                 isValidMove = true;
         }
         else if (!isValidMove)
         {
-            currentPlayer.PickCards(Deck, 2);
-            return true;
+            if (Attacks == 0)
+            {
+                isValidMove = true;
+            }
+            else
+            {
+                currentPlayer.PickCards(Deck, 2);
+                return true;
+            }
         }
         else if (!string.IsNullOrEmpty(RequiredSuit)) RequiredSuit = string.Empty;
-        if (isValidMove || (cardEffect is AttackEffect && Attacks <= 0))
+
+        if (isValidMove || cardEffect is AttackEffect)
         {
             Deck.AddCard(playerChoice);
             if (currentPlayer.Hand == null)
@@ -163,11 +174,13 @@ public class Game
             NotifyFaceUp();
             return true;
         }
+
         return false;
     }
 
     public void AddPlayer(Player player)
     {
+        if (Players.Contains(player)) return;
         Player[] players = Players;
         Array.Resize(ref players, players.Length + 1);
         players[^1] = player;
@@ -181,7 +194,13 @@ public class Game
 
     public Card? GetFaceUp()
     {
-        return Deck.FaceUp.Count > 0 ? Deck.FaceUp[^1] : null;
+        Card? card = null;
+        if (Deck is { FaceUp.Count: > 0 })
+        {
+            card = Deck.FaceUp[^1];
+        }
+
+        return card;
     }
 
     private void EndGame()
@@ -201,12 +220,20 @@ public class Game
         foreach (Player player in Players)
         {
             player.Hand = Deck.DealCards(count);
+            _ = Deck.VibeCheck(Players, "DEAL CARDS");
         }
     }
-    
+
     private void DealCards(string[] ranks)
     {
-        //TODO: find out why we dealing more cards than needed
+        //TODO: find out why we dealing more cards than needed => resolved
+        //Resolution: StartGame was called by each player, leading to card miscount
+        if (Deck == null)
+        {
+            Console.WriteLine("No deck. Panic!!");
+            return;
+        }
+
         foreach (Player player in Players)
         {
             player.Hand = Deck.DealCards(ranks);
@@ -235,6 +262,7 @@ public class Game
             _pivot = false;
             return;
         }
+
         if (Clockwise)
         {
             Turn = (Turn + Step + n) % n;
@@ -243,6 +271,7 @@ public class Game
         {
             Turn = (Turn + n - Step) % n;
         }
+
         // reset to default
         Step = 1;
         _pivot = false;
@@ -257,6 +286,6 @@ public class Game
 
     private void NotifyFaceUp(Card? card = null)
     {
-        FaceUpCardChanged?.Invoke(card ?? GetFaceUp() ?? new Card(){Rank = "Unknown", Suit = "Unknown"});
+        FaceUpCardChanged?.Invoke(card ?? GetFaceUp() ?? new Card() { Rank = "Unknown", Suit = "Unknown" });
     }
 }

@@ -5,13 +5,16 @@ namespace Crazy8.Models;
 public class Deck
 {
     private List<Card> FaceDown { get; set; }
+    public event EventHandler<VibeCheckEventArgs> VibeCheckEvent;
     public List<Card> FaceUp { get; set; }
     private static readonly Random Random = new Random();
+    private int Size;
 
     public Deck(int size = 52)
     {
         FaceDown = new List<Card>();
         FaceUp = new List<Card>();
+        Size = size;
         foreach (string suit in Const.Suits)
         {
             foreach (string rank in Const.Ranks)
@@ -22,6 +25,7 @@ public class Deck
                 });
             }
         }
+
         FaceDown.Add(new Card()
         {
             Suit = "Red", Rank = "Joker", Image = $"assets/cards/red_joker.png"
@@ -65,12 +69,15 @@ public class Deck
     {
         if (FaceDown.Contains(card) || FaceUp.Contains(card))
         {
-            throw new Exception("You cannot have a card that already exists in the deck!\nPanic!!!");
+            // throw new Exception("You cannot have a card that already exists in the deck!\nPanic!!!");
+            VibeCheckEventArgs args = new("You cannot have a card that already exists in the deck!") 
+                { Card = card };
+            OnVibeCheckEvent(args);
         }
 
         FaceUp.Add(card);
     }
-    
+
     /// <summary>
     /// Deal cards from deck
     /// </summary>
@@ -100,6 +107,26 @@ public class Deck
         return card;
     }
 
+    /// <summary>
+    /// Checks the distribution of cards across the game.
+    /// </summary>
+    /// <returns>True if cards are consistent, and false if universe is fucked.</returns>
+    public bool VibeCheck(Player[] players, string invoker)
+    {
+        // Count cards
+        int playersHands = 0;
+        foreach (Player player in players)
+        {
+            if (player.Hand == null) continue;
+            playersHands += player.Hand.Length;
+        }
+        int totalCards = FaceDown.Count + FaceUp.Count + playersHands;
+        if (totalCards == Size) return true;
+        OnVibeCheckEvent(new 
+            VibeCheckEventArgs($"The universe is fucked. Check {invoker} to find out what happened."));
+        return false;
+    }
+
     public void Reset()
     {
         foreach (Card card in FaceUp.ToList())
@@ -107,5 +134,16 @@ public class Deck
             FaceDown.Add(card);
             FaceUp.Remove(card);
         }
+    }
+    
+    public class VibeCheckEventArgs(string reason) : EventArgs
+    {
+        public string Reason { get; set; } = reason;
+        public Card? Card { get; set; } = null;
+    }
+
+    protected virtual void OnVibeCheckEvent(VibeCheckEventArgs e)
+    {
+        VibeCheckEvent?.Invoke(this, e);
     }
 }

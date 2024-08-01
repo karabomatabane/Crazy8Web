@@ -66,9 +66,7 @@ public partial class StartPage : ComponentBase
 
     private async Task CreatePlayer()
     {
-        Console.WriteLine(_inputName);
         if (string.IsNullOrEmpty(_inputName)) return;
-        await SessionStore.SetAsync("test", "This is a test");
         Owner = new Player(_inputName);
         await SessionStore.SetAsync(OwnerKey, Owner);
     }
@@ -83,7 +81,5 @@ public partial class StartPage : ComponentBase
     {
         await _hubConnection.DisposeAsync();
     }
-    
-
 
 }

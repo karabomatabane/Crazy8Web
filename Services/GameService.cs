@@ -45,7 +45,13 @@ public class GameService
         // Subscribe to game events
         _game.FaceUpCardChanged += OnFaceUpCardChanged;
         _game.PlayerTurnChanged += OnPlayerTurnChanged;
+
         CallEffect.SuitPrompted += OnSuitPrompted;
+    }
+
+    private void DeckOnVibeCheckEvent(object? sender, Deck.VibeCheckEventArgs e)
+    {
+        Console.WriteLine("Something went wrong!");
     }
 
     private Task<string> OnSuitPrompted(string defaultSuit)
@@ -105,6 +111,7 @@ public class GameService
     public void StartSession()
     {
         _hubContext.Clients.All.SendAsync(Const.StartSession);
+        if (_game.Deck != null) _game.Deck.VibeCheckEvent += DeckOnVibeCheckEvent;
     }
 
     public Card[] GetPlayerCards(string playerId)
@@ -126,9 +133,15 @@ public class GameService
     public async Task ProgressGame(Card? playerChoice)
     {
         await _game.ProgressGame(playerChoice);
+        bool isFine = _game.Deck.VibeCheck(_game.Players, "progress game");
+        if (!isFine)
+        {
+            Console.WriteLine("Something went wrong playing card");
+        }
     }
 
     public Card? GetFaceUp() => _game.GetFaceUp();
+    public int GetAttacks() => _game.Attacks;
     public string? GetRequiredSuit() => _game.RequiredSuit;
     public int GetTurn() => _game.Turn;
 }

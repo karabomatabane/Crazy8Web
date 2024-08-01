@@ -12,6 +12,10 @@ html, body {
     color:  #cbccce !important;
 }
 
+.mdc-dialog, .mdc-select__menu {
+    z-index: 4000 !important;
+}
+
 .form-container {
     max-width: 500px;
     margin: 0 auto;

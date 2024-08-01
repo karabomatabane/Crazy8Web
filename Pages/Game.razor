@@ -12,68 +12,83 @@
                 </MatChip>
             }
         </MatChipSet>
-        <MatCard class="demo-mat-card">
-            <MatCardContent>
-                <div class="demo-mat-card-content">
-                    <MatHeadline6 class="demo-mat-card-clean-margin center">
-                        Table
-                    </MatHeadline6>
-                </div>
+        @if (_attacks > 0)
+        {
+            <MatChipSet>
+                <MatChip Label="@GetAttacks()" LeadingIcon="bolt"
+                         Style="background-color:#f44336">
+                </MatChip>
+            </MatChipSet>
+        }
 
+        <div class="demo-mat-card">
+            <div class="demo-mat-card-content desk-header">
+                <MatHeadline6 class="demo-mat-card-clean-margin center">
+                    Table
+                </MatHeadline6>
+            </div>
+            <div class="desk-content">
                 <div class="card">
                     <img src="assets/cards/back.png" alt="@_faceUp?.Rank of @_faceUp?.Suit">
-                    <img src="@_faceUp?.Image" alt="@_faceUp?.Rank of @_faceUp?.Suit">
-                    @if (_requireSuit)
+                    @if (_requireSuit && !string.IsNullOrEmpty(GameService.GetRequiredSuit()))
                     {
                         <img src="@Utility.GetCardImage(GameService.GetRequiredSuit()!.ToLower())"
                              alt="GameService.GetRequiredSuit()!">
                     }
+                    else
+                    {
+                        <img src="@_faceUp?.Image" alt="@_faceUp?.Rank of @_faceUp?.Suit" class="table-card">
+                    }
                 </div>
-            </MatCardContent>
-        </MatCard>
+            </div>
+        </div>
 
         @if (_myCards != null)
         {
-            <MatCard class="demo-mat-card">
-                <MatCardContent>
-                    <div class="demo-mat-card-content">
-                        <MatHeadline6 class="demo-mat-card-clean-margin center">
-                            Your Hand
-                        </MatHeadline6>
-                    </div>
-
+            <div class="demo-mat-card">
+                <div class="demo-mat-card-content desk-header">
+                    <MatHeadline6 class="demo-mat-card-clean-margin center">
+                        Your Hand
+                    </MatHeadline6>
+                </div>
+                <div class="desk-content">
                     <div class="card">
                         @for (int i = 0; i < _myCards.Length; i++)
                         {
                             Card card = _myCards[i];
                             bool isSelected = _tempChoice == i;
                             int pos = i;
-                            <img src="@card?.Image" @onclick="() => SelectCard(pos)" 
+                            <img src="@card?.Image" @onclick="() => SelectCard(pos)"
                                  class="@(IsMyTurn() ? isSelected ? "play-card selected" : "play-card" : "no-play")" alt="@card?.Rank of @card?.Suit">
                         }
                     </div>
-                </MatCardContent>
-            </MatCard>
-            @* <MatSelect Label="Pick a Card" @bind-Value="@_choice"> *@
-            @*     @for (int i = 0; i < _myCards.Length; i++) *@
-            @*     { *@
-            @*         int index = i; *@
-            @*         <MatOption TValue="int" Value="@i">@_myCards[index].Rank of @_myCards[index].Suit</MatOption> *@
-            @*     } *@
-            @* </MatSelect> *@
-            @* <MatButton Raised="true" OnClick="PlayChoice" Disabled="!IsMyTurn()">Play</MatButton> *@
-            <MatButton Raised="true" OnClick="Skip" Disabled="!IsMyTurn()">Skip</MatButton>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <MatButton Raised="true" OnClick="Skip" class="btnSkip" Disabled="!IsMyTurn()">Skip</MatButton>
+            </div>
         }
     }
-    <MatDialog @bind-IsOpen="@_dialogIsOpen">
-        <MatDialogTitle>Crazy 8</MatDialogTitle>
-        <MatDialogContent>
-            <p>What suit do you want?</p>
-            <MatSelectValue Label="Suit" @bind-Value="@_dialogSuit" Items="@Const.Suits" 
-                            ValueSelector=@(name=>name)></MatSelectValue>
-        </MatDialogContent>
-        <MatDialogActions>
-            <MatButton OnClick="@OkClick">OK</MatButton>
-        </MatDialogActions>
+    <MatDialog @bind-IsOpen="@_dialogIsOpen" Id="dialog-box">
+        @if (IsMyTurn())
+        {
+            <MatDialogTitle>Crazy 8</MatDialogTitle>
+            <MatDialogContent>
+                <p>What suit do you want?</p>
+                <MatSelectValue Label="Suit" @bind-Value="@_dialogSuit" Items="@Const.Suits"
+                                ValueSelector=@(name => name)>
+                </MatSelectValue>
+            </MatDialogContent>
+            <MatDialogActions>
+                <MatButton OnClick="@OkClick">OK</MatButton>
+            </MatDialogActions>
+        }
+        else
+        {
+            <MatDialogContent>
+                <MatH4>Please wait for player to pick a suit...</MatH4>
+            </MatDialogContent>
+        }
     </MatDialog>
 </div>

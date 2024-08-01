@@ -30,6 +30,7 @@ public partial class Game : ComponentBase
     private string? _dialogSuit = null;
     private bool _requireSuit = false;
     private int? _tempChoice = null;
+    private int _attacks = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,6 +45,7 @@ public partial class Game : ComponentBase
                 _players = GameService.GetPlayers().ToList();
                 _faceUp = card;
                 _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
+                Console.WriteLine("New FaceUp!!");
                 StateHasChanged();
             }));
         });
@@ -59,26 +61,41 @@ public partial class Game : ComponentBase
                     _myCards = GameService.GetPlayerCards(Owner.PlayerId);
                 _choice = 0;
                 _tempChoice = null;
+                _attacks = GameService.GetAttacks();
+                _dialogIsOpen = false;
                 StateHasChanged();
             }));
         });
         
-        _hubConnection.On<string>(Const.PromptSuit, PromptPlayerForSuit);
+        _hubConnection.On<string>(Const.PromptSuit, async (defaultSuit) =>
+        {
+            // Trigger the dialog for all players
+            await InvokeAsync(() =>
+            {
+                _dialogSuit = defaultSuit;
+                _dialogIsOpen = true;
+                StateHasChanged();
+            });
+        });
 
         await _hubConnection.StartAsync();
         await LoadOwnerFromSessionAsync();
-        if (!GameService.IsGameRunning())
-        {
-            GameService.StartGame();
-        }
+       
         _players = GameService.GetPlayers().ToList();
         if (Owner == null)
         {
             _myCards = [];
             return;
         }
+        if (!GameService.IsGameRunning() && GameService.IsMine(Owner.PlayerId))
+        {
+            GameService.StartGame();
+        }
         _myCards = GameService.GetPlayerCards(Owner.PlayerId);
-        _faceUp = GameService.GetFaceUp();
+        if (GameService.IsGameRunning())
+        {
+            _faceUp = GameService.GetFaceUp();
+        }
         _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
         _turn = _players[GameService.GetTurn()];
     }
@@ -132,12 +149,21 @@ public partial class Game : ComponentBase
         return false;
     }
 
-    private void SelectCard(int choice)
+    private string GetAttacks() => (_attacks * 2).ToString();
+
+    private async void SelectCard(int choice)
     {
         if (!IsMyTurn()) return;
         if (_tempChoice == choice)
         {
             _choice = choice;
+            // StateHasChanged(); // Refresh the UI to apply the "selected" class
+            //
+            // Call the JavaScript function to animate the card
+            // await JSRuntime.InvokeVoidAsync("animateCard", choice);
+            // await Task.Delay(500);
+
+            _tempChoice = null;
             PlayChoice();
         }
         else
