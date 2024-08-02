@@ -2,7 +2,11 @@
 
 ### Overview
 
-Welcome to the Crazy 8 Card Game! This project is a digital rendition of the popular card game widely enjoyed in South Africa. Built using C# with .NET 7.0, Blazor Server, MatBlazor, and SignalR, this game allows you to play Crazy 8 with friends regardless of geographical distances. I developed this game to reconnect and enjoy some fun times with my friends who live in different cities. I hope you find this project as exciting as I do. Contributions and collaborations are more than welcome!
+Welcome to the Crazy 8 Card Game! This project is a digital rendition of the popular card game widely enjoyed in South 
+Africa. Built using `C#` with `.NET 7.0`, `Blazor Server`, `MatBlazor`, and `SignalR`, this game allows you to play 
+Crazy 8 with friends regardless of geographical distances. I developed this game to reconnect and enjoy some fun times 
+with my friends who live in different cities. I hope you find this project as exciting as I do. Contributions and 
+collaborations are more than welcome!
 
 ![img.png](img.png)
 ### Technologies Used
