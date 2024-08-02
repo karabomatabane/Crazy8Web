@@ -99,6 +99,14 @@ public partial class Game : ComponentBase
         _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
         _turn = _players[GameService.GetTurn()];
     }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_myCards.Length > 0)
+        {
+            await JSRuntime.InvokeVoidAsync("applyCardFanEffect");
+        }
+    }
 
     private async Task LoadOwnerFromSessionAsync()
     {

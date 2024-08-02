@@ -4,22 +4,27 @@
 <div class="container">
     @if (_players != null && Owner != null)
     {
-        <MatChipSet>
-            @foreach (Player player in _players)
-            {
-                <MatChip Label="@GetPlayerName(player)" LeadingIcon="person"
-                         Style="@(player == _turn ? "background-color:#4caf50" : "background-color: #e0e0e0")">
-                </MatChip>
-            }
-        </MatChipSet>
-        @if (_attacks > 0)
-        {
-            <MatChipSet>
-                <MatChip Label="@GetAttacks()" LeadingIcon="bolt"
-                         Style="background-color:#f44336">
-                </MatChip>
+        <div class="chips-container">
+            <MatChipSet class="player-chips">
+                @foreach (Player player in _players)
+                {
+                    <MatChip Label="@GetPlayerName(player)" LeadingIcon="person"
+                             Style="@(player == _turn ? "background-color:#4caf50" : "background-color: #e0e0e0")">
+                    </MatChip>
+                }
             </MatChipSet>
-        }
+            @if (_attacks > 0)
+            {
+                <div class="anim-chip">
+                    <MatChipSet class="attacks-chip">
+                        <MatChip Label="@GetAttacks()" LeadingIcon="bolt"
+                                 Style="background-color:#f44336;">
+                        </MatChip>
+                    </MatChipSet>
+                </div>
+               
+            }
+        </div>
 
         <div class="demo-mat-card">
             <div class="demo-mat-card-content desk-header">
@@ -51,7 +56,7 @@
                         Your Hand
                     </MatHeadline6>
                 </div>
-                <div class="desk-content">
+                <div class="desk-content hand-container">
                     <div class="card">
                         @for (int i = 0; i < _myCards.Length; i++)
                         {
@@ -59,7 +64,7 @@
                             bool isSelected = _tempChoice == i;
                             int pos = i;
                             <img src="@card?.Image" @onclick="() => SelectCard(pos)"
-                                 class="@(IsMyTurn() ? isSelected ? "play-card selected" : "play-card" : "no-play")" alt="@card?.Rank of @card?.Suit">
+                                 class="fan-card @(IsMyTurn() ? isSelected ? "play-card selected" : "play-card" : "no-play")" alt="@card?.Rank of @card?.Suit">
                         }
                     </div>
                 </div>

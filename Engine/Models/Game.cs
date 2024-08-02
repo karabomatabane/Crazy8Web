@@ -6,6 +6,7 @@ public class Game
 {
     public event Action<Card>? FaceUpCardChanged;
     public event Action<string>? PlayerTurnChanged;
+    public event Action<string>? GameHasEnded;
     public string GameId { get; private set; }
     public Player[] Players { get; private set; }
     public string Owner { get; set; }
@@ -206,6 +207,7 @@ public class Game
     private void EndGame()
     {
         IsRunning = false;
+        GameHasEnded?.Invoke("Done");
         // Console.WriteLine($"THE GAME HAS ENDED!\nWINNER: {Players[0]}");
         // for (int i = 0; i < Out.Count; i++)
         // {
