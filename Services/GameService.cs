@@ -45,8 +45,14 @@ public class GameService
         // Subscribe to game events
         _game.FaceUpCardChanged += OnFaceUpCardChanged;
         _game.PlayerTurnChanged += OnPlayerTurnChanged;
+        _game.GameHasEnded += GameOnGameHasEnded;
 
         CallEffect.SuitPrompted += OnSuitPrompted;
+    }
+
+    private void GameOnGameHasEnded(string details)
+    {
+        _hubContext.Clients.All.SendAsync(Const.EndGame, details);
     }
 
     private void DeckOnVibeCheckEvent(object? sender, Deck.VibeCheckEventArgs e)

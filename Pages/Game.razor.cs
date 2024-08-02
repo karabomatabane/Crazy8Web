@@ -78,6 +78,15 @@ public partial class Game : ComponentBase
             });
         });
 
+        _hubConnection.On<string>(Const.EndGame, async (details) =>
+        {
+            await InvokeAsync(() =>
+            {
+                //TODO: Handle end game
+                StateHasChanged();
+            });
+        });
+
         await _hubConnection.StartAsync();
         await LoadOwnerFromSessionAsync();
        
