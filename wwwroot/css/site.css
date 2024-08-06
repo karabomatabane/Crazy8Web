@@ -7,6 +7,23 @@ html, body {
     background: url("../assets/pattern1.jpg");
     background-size: cover;
 }
+.page {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+main {
+    flex: 1;
+}
+
+footer {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0;
+    width: 100%;
+    padding: 1rem;
+    text-align: center;
+}
 
 .light-text {
     color:  #cbccce !important;
@@ -14,6 +31,10 @@ html, body {
 
 .mdc-dialog, .mdc-select__menu {
     z-index: 4000 !important;
+}
+
+.mdc-dialog {
+    top: -10% !important;
 }
 
 .form-container {

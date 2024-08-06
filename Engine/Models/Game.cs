@@ -64,7 +64,7 @@ public class Game
         Deck = new Deck(54);
 
         Deck.Shuffle();
-        DealCards(["8", "2", "Ace", "7", "Joker"]);
+        DealCards(["8", "Jack", "Ace", "7", "Joker"]);
         while (true)
         {
             Deck.TurnCard();
@@ -262,6 +262,7 @@ public class Game
         if (n == 2 && _pivot)
         {
             _pivot = false;
+            NotifyPlayerTurn();
             return;
         }
 
