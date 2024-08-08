@@ -22,7 +22,6 @@
                         </MatChip>
                     </MatChipSet>
                 </div>
-               
             }
         </div>
 
@@ -95,5 +94,11 @@
                 <MatH4>Please wait for player to pick a suit...</MatH4>
             </MatDialogContent>
         }
+    </MatDialog>
+    <MatDialog @bind-IsOpen="@_gameHasEnded">
+        <MatDialogTitle>Crazy 8</MatDialogTitle>
+        <MatDialogContent>
+            <MatH4>The game has ended.</MatH4>
+        </MatDialogContent>
     </MatDialog>
 </div>

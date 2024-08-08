@@ -8,21 +8,17 @@ html, body {
     background-size: cover;
 }
 .page {
-    display: flex !important;
-    flex-direction: column !important;
+    min-height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
 }
 
-main {
-    flex: 1;
-}
-
-footer {
-    position: fixed !important;
+.my-footer {
     top: auto !important;
     bottom: 0;
-    width: 100%;
     padding: 1rem;
     text-align: center;
+    width: 100%;
 }
 
 .light-text {

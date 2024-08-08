@@ -31,6 +31,7 @@ public partial class Game : ComponentBase
     private bool _requireSuit = false;
     private int? _tempChoice = null;
     private int _attacks = 0;
+    private bool _gameHasEnded = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,6 +84,7 @@ public partial class Game : ComponentBase
             await InvokeAsync(() =>
             {
                 //TODO: Handle end game
+                _gameHasEnded = true;
                 StateHasChanged();
             });
         });
