@@ -4,25 +4,104 @@ namespace Crazy8.Models;
 
 public class Game
 {
+     /// <summary>
+    /// Event triggered when the face-up card changes
+    /// </summary>
     public event Action<Card>? FaceUpCardChanged;
+    
+    /// <summary>
+    /// Event triggered when the current player's turn changes
+    /// </summary>
     public event Action<string>? PlayerTurnChanged;
-    public event Action<string>? GameHasEnded;
+    
+    /// <summary>
+    /// Event triggered when the game ends
+    /// </summary>
+    public event Action<List<Player>>? GameHasEnded;
+    
+    /// <summary>
+    /// Unique identifier for the game session
+    /// </summary>
     public string GameId { get; private set; }
+    
+    /// <summary>
+    /// Array of currently active players in the game
+    /// </summary>
     public Player[] Players { get; private set; }
+    
+    /// <summary>
+    /// Player ID of the game owner/creator
+    /// </summary>
     public string Owner { get; set; }
+    
+    /// <summary>
+    /// The deck of cards used in the game
+    /// </summary>
     public Deck? Deck { get; set; }
+    
+    /// <summary>
+    /// Current round number
+    /// </summary>
     private int Round { get; set; }
+    
+    /// <summary>
+    /// Total number of rounds to be played
+    /// </summary>
     private int TotalRounds { get; }
+    
+    /// <summary>
+    /// Index of the player whose turn it currently is
+    /// </summary>
     public int Turn { get; private set; }
-    public int Step { get; set; } = 1; // default step is 1 
+    
+    /// <summary>
+    /// Number of positions to advance on each turn
+    /// </summary>
+    public int Step { get; set; } = 1; // default step is 1
+    
+    /// <summary>
+    /// Direction of play (true for clockwise, false for counter-clockwise)
+    /// </summary>
     public bool Clockwise { get; set; } = true; // default direction is clockwise
+    
+    /// <summary>
+    /// List of currently active effects in the game
+    /// </summary>
     private List<IEffect?> ActiveEffects { get; set; } // list of active effects
+    
+    /// <summary>
+    /// Players who have finished their cards for the current round
+    /// </summary>
     private List<Player> Bench { get; set; }
+    
+    /// <summary>
+    /// Players who are out of the game completely
+    /// </summary>
     private List<Player> Out { get; set; }
+    
+    /// <summary>
+    /// Number of accumulated attack points that next player must respond to or draw cards
+    /// </summary>
     public int Attacks { get; set; }
+    
+    /// <summary>
+    /// Dictionary mapping card ranks to their special effects
+    /// </summary>
     private Dictionary<string, IEffect?> SpecialCards { get; set; }
+    
+    /// <summary>
+    /// Suit that must be played in the next turn (e.g., after playing an 8)
+    /// </summary>
     public string? RequiredSuit { get; set; }
-    public bool IsRunning { get; set; }
+    
+    /// <summary>
+    /// Indicates whether the game is currently in progress
+    /// </summary>
+    public bool IsRunning { get; private set; }
+    
+    /// <summary>
+    /// Flag to handle special case in direction change for 2-player games
+    /// </summary>
     private bool _pivot = false;
 
     public Game(Player owner, Dictionary<string, IEffect?> specialCards)
@@ -98,7 +177,7 @@ public class Game
         if (!currentPlayer.HasCards())
         {
             Bench.Add(currentPlayer);
-            List<Player> temp = new(Players);
+            List<Player> temp = [..Players];
             temp.Remove(currentPlayer);
             Players = temp.ToArray();
             if (Players.Length == 1)
@@ -106,12 +185,27 @@ public class Game
                 Out.Add(Players[0]);
                 Round++;
                 if (Round >= TotalRounds)
-                    EndGame();
-                StartGame(Round);
+                {
+                    List<Player> results = [..Bench];
+                    Out.Reverse();
+                    results.AddRange(Out);
+                    EndGame(results);
+                } else
+                {
+                    StartGame(Round);
+                }
             }
         }
     }
 
+    /// <summary>
+    /// Validates the player's choice of card to play.
+    /// If the choice is null, the player draws cards from the deck.
+    /// If the choice is a valid card, it is played and any special effects are applied.
+    /// If the choice is invalid, the player draws cards as a penalty.
+    /// </summary>
+    /// <param name="playerChoice"></param>
+    /// <returns></returns>
     private async Task<bool> ValidateChoice(Card? playerChoice)
     {
         Player currentPlayer = Players[Turn];
@@ -154,7 +248,7 @@ public class Game
         {
             if (Attacks == 0)
             {
-                isValidMove = true;
+                isValidMove = true; // TODO: Investigate as to why this is needed (might need a `faceUp.Effect is AttackEffect`)
             }
             else
             {
@@ -164,19 +258,15 @@ public class Game
         }
         else if (!string.IsNullOrEmpty(RequiredSuit)) RequiredSuit = string.Empty;
 
-        if (isValidMove || cardEffect is AttackEffect)
-        {
-            Deck.AddCard(playerChoice);
-            if (currentPlayer.Hand == null)
-                return false;
-            Card[] playerCards = currentPlayer.Hand.Where(card => card != playerChoice).ToArray();
-            Players[Turn].Hand = playerCards;
-            await ApplySpecialCard(playerChoice.Rank);
-            NotifyFaceUp();
-            return true;
-        }
-
-        return false;
+        if (!isValidMove && cardEffect is not AttackEffect) return false;
+        Deck.AddCard(playerChoice);
+        if (currentPlayer.Hand == null)
+            return false;
+        Card[] playerCards = currentPlayer.Hand.Where(card => card != playerChoice).ToArray();
+        Players[Turn].Hand = playerCards;
+        await ApplySpecialCard(playerChoice.Rank);
+        NotifyFaceUp();
+        return true;
     }
 
     public void AddPlayer(Player player)
@@ -204,10 +294,16 @@ public class Game
         return card;
     }
 
-    private void EndGame()
+    /// <summary>
+    /// Ends the game and notifies all players of the results.
+    /// </summary>
+    /// <param name="results">
+    /// Ordered list of players who finished the game.
+    /// </param>
+    private void EndGame(List<Player> results)
     {
         IsRunning = false;
-        GameHasEnded?.Invoke("Done");
+        GameHasEnded?.Invoke(results);
         // Console.WriteLine($"THE GAME HAS ENDED!\nWINNER: {Players[0]}");
         // for (int i = 0; i < Out.Count; i++)
         // {

@@ -76,7 +76,7 @@
     margin-top: 10px;
 }
 
-.btnSkip {
+.btnPick {
     margin: auto;
 }
 
@@ -124,4 +124,66 @@
 
 .no-play:hover {
     cursor: not-allowed;
+}
+
+.dialog-subtitle {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.results-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin: 1rem 0 0.5rem 0;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.results-list {
+    margin-top: 16px;
+}
+
+.results-list ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.result-item {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+
+.rank {
+    font-weight: bold;
+    margin-right: 12px;
+    min-width: 24px;
+}
+
+.player-name {
+    font-size: 16px;
+}
+
+.winner-icon {
+    margin-left: auto; /* Pushes the trophy to the far right */
+    padding-left: 0.5rem; /* Adds spacing between name and trophy */
+}
+
+.highlight-first {
+    background-color: #fff9c4; /* Light yellow background for 1st place */
+    font-weight: bold;
+    padding-right: 4px;
+    border-right: 4px solid #ffd600; /* Gold accent */
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
 }

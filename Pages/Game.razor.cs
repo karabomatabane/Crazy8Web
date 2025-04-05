@@ -4,6 +4,7 @@ using Crazy8Web.Services;
 using MatBlazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Microsoft.AspNetCore.SignalR.Client;
 using TextCopy;
@@ -18,7 +19,7 @@ public partial class Game : ComponentBase
     [Inject] private ProtectedSessionStorage SessionStore { get; set; }
     [Inject] protected IMatToaster Toaster { get; set; }
     private Player? Owner { get; set; }
-    
+
     private HubConnection _hubConnection;
     private Player? _turn;
     private Card? _faceUp;
@@ -32,6 +33,7 @@ public partial class Game : ComponentBase
     private int? _tempChoice = null;
     private int _attacks = 0;
     private bool _gameHasEnded = false;
+    private List<Player>? _results = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -67,7 +69,7 @@ public partial class Game : ComponentBase
                 StateHasChanged();
             }));
         });
-        
+
         _hubConnection.On<string>(Const.PromptSuit, async (defaultSuit) =>
         {
             // Trigger the dialog for all players
@@ -79,38 +81,42 @@ public partial class Game : ComponentBase
             });
         });
 
-        _hubConnection.On<string>(Const.EndGame, async (details) =>
+        _hubConnection.On<List<Player>>(Const.EndGame, async (results) =>
         {
             await InvokeAsync(() =>
             {
-                //TODO: Handle end game
+                // TODO: Handle end game
                 _gameHasEnded = true;
+                _results = results;
                 StateHasChanged();
             });
         });
 
         await _hubConnection.StartAsync();
         await LoadOwnerFromSessionAsync();
-       
+
         _players = GameService.GetPlayers().ToList();
         if (Owner == null)
         {
             _myCards = [];
             return;
         }
+
         if (!GameService.IsGameRunning() && GameService.IsMine(Owner.PlayerId))
         {
             GameService.StartGame();
         }
+
         _myCards = GameService.GetPlayerCards(Owner.PlayerId);
         if (GameService.IsGameRunning())
         {
             _faceUp = GameService.GetFaceUp();
         }
+
         _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
         _turn = _players[GameService.GetTurn()];
     }
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_myCards.Length > 0)
@@ -135,13 +141,13 @@ public partial class Game : ComponentBase
             Console.WriteLine(e);
         }
     }
-    
+
     private void PromptPlayerForSuit(string defaultSuit)
     {
         _dialogSuit = defaultSuit;
         _dialogIsOpen = true && IsMyTurn();
     }
-    
+
     private void OkClick()
     {
         _suit = _dialogSuit;
@@ -176,7 +182,7 @@ public partial class Game : ComponentBase
         if (_tempChoice == choice)
         {
             _choice = choice;
-            // StateHasChanged(); // Refresh the UI to apply the "selected" class
+            StateHasChanged(); // Refresh the UI to apply the "selected" class
             //
             // Call the JavaScript function to animate the card
             // await JSRuntime.InvokeVoidAsync("animateCard", choice);
@@ -196,7 +202,7 @@ public partial class Game : ComponentBase
         await GameService.ProgressGame(_myCards[_choice]);
     }
 
-    private async void Skip()
+    private async void Pick()
     {
         await GameService.ProgressGame(null);
     }
@@ -204,5 +210,16 @@ public partial class Game : ComponentBase
     public async ValueTask DisposeAsync()
     {
         await _hubConnection.DisposeAsync();
+    }
+
+    private void Rematch()
+    {
+        // TODO: Start a new game from scratch with the same players
+    }
+
+    private void LeaveGame()
+    {
+        // Navigate to the home page
+        NavigationManager.NavigateTo("/");
     }
 }

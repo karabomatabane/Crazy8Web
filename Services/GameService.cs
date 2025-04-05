@@ -50,9 +50,9 @@ public class GameService
         CallEffect.SuitPrompted += OnSuitPrompted;
     }
 
-    private void GameOnGameHasEnded(string details)
+    private void GameOnGameHasEnded(List<Player> results)
     {
-        _hubContext.Clients.All.SendAsync(Const.EndGame, details);
+        _hubContext.Clients.All.SendAsync(Const.EndGame, results);
     }
 
     private void DeckOnVibeCheckEvent(object? sender, Deck.VibeCheckEventArgs e)

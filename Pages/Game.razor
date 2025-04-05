@@ -70,7 +70,7 @@
             </div>
 
             <div class="button-container">
-                <MatButton Raised="true" OnClick="Skip" class="btnSkip" Disabled="!IsMyTurn()">Skip</MatButton>
+                <MatButton Raised="true" OnClick="Pick" class="btnPick" Disabled="!IsMyTurn()">Pick</MatButton>
             </div>
         }
     }
@@ -96,9 +96,33 @@
         }
     </MatDialog>
     <MatDialog @bind-IsOpen="@_gameHasEnded">
-        <MatDialogTitle>Crazy 8</MatDialogTitle>
         <MatDialogContent>
-            <MatH4>The game has ended.</MatH4>
+            <div class="dialog-subtitle">The game has ended</div>
+            <div class="results-title">Results</div>
+            @if (_results != null)
+            {
+            <div class="results-list">
+                <ul>
+                    @for (int i = 0; i < _results.Count; i++)
+                    {
+                    Player player = _results[i];
+                    int rank = i + 1;
+                    <li class="result-item @(rank == 1 ? "highlight-first" : "")">
+                        <span class="rank">@rank.</span>
+                        <span class="player-name">@(player.PlayerId == Owner?.PlayerId ? "You" : player.Name)</span>
+                        @if (rank == 1)
+                        {
+                        <span class="winner-icon">🏆</span>
+                        }
+                    </li>
+                    }
+                </ul>
+            </div>
+            }
+            <div class="dialog-actions">
+                <MatButton OnClick="@Rematch" class="rematch-button">Rematch</MatButton>
+                <MatButton OnClick="@LeaveGame" class="leave-button">Leave</MatButton>
+            </div>
         </MatDialogContent>
     </MatDialog>
 </div>
