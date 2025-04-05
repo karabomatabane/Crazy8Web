@@ -2,19 +2,19 @@
 
 namespace Crazy8.Models;
 
-public class Deck
+public sealed class Deck
 {
     private List<Card> FaceDown { get; set; }
-    public event EventHandler<VibeCheckEventArgs> VibeCheckEvent;
+    public event EventHandler<VibeCheckEventArgs> VibeCheckEvent = null!;
     public List<Card> FaceUp { get; set; }
     private static readonly Random Random = new Random();
-    private int Size;
+    private readonly int _size;
 
     public Deck(int size = 52)
     {
         FaceDown = new List<Card>();
         FaceUp = new List<Card>();
-        Size = size;
+        _size = size;
         foreach (string suit in Const.Suits)
         {
             foreach (string rank in Const.Ranks)
@@ -34,6 +34,11 @@ public class Deck
         {
             Suit = "Black", Rank = "Joker", Image = $"assets/cards/black_joker.png"
         });
+    }
+
+    public int GetCount()
+    {
+        return FaceDown.Count;
     }
 
     public void Shuffle()
@@ -121,7 +126,7 @@ public class Deck
             playersHands += player.Hand.Length;
         }
         int totalCards = FaceDown.Count + FaceUp.Count + playersHands;
-        if (totalCards == Size) return true;
+        if (totalCards == _size) return true;
         OnVibeCheckEvent(new 
             VibeCheckEventArgs($"The universe is fucked. Check {invoker} to find out what happened."));
         return false;
@@ -139,11 +144,11 @@ public class Deck
     public class VibeCheckEventArgs(string reason) : EventArgs
     {
         public string Reason { get; set; } = reason;
-        public Card? Card { get; set; } = null;
+        public Card? Card { get; set; }
     }
 
-    protected virtual void OnVibeCheckEvent(VibeCheckEventArgs e)
+    private void OnVibeCheckEvent(VibeCheckEventArgs e)
     {
-        VibeCheckEvent?.Invoke(this, e);
+        VibeCheckEvent.Invoke(this, e);
     }
 }

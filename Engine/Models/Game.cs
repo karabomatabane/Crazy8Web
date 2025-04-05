@@ -37,7 +37,7 @@ public class Game
     /// <summary>
     /// The deck of cards used in the game
     /// </summary>
-    public Deck? Deck { get; set; }
+    public Deck Deck { get; set; }
     
     /// <summary>
     /// Current round number
@@ -63,11 +63,6 @@ public class Game
     /// Direction of play (true for clockwise, false for counter-clockwise)
     /// </summary>
     public bool Clockwise { get; set; } = true; // default direction is clockwise
-    
-    /// <summary>
-    /// List of currently active effects in the game
-    /// </summary>
-    private List<IEffect?> ActiveEffects { get; set; } // list of active effects
     
     /// <summary>
     /// Players who have finished their cards for the current round
@@ -102,7 +97,9 @@ public class Game
     /// <summary>
     /// Flag to handle special case in direction change for 2-player games
     /// </summary>
-    private bool _pivot = false;
+    private bool _pivot;
+
+    private readonly int _deckSize = 54;
 
     public Game(Player owner, Dictionary<string, IEffect?> specialCards)
     {
@@ -112,9 +109,9 @@ public class Game
         SpecialCards = specialCards;
         Round = 0;
         TotalRounds = Players.Length - 1;
-        ActiveEffects = new List<IEffect?>();
         Bench = new List<Player>();
         Out = new List<Player>();
+        Deck = new Deck(_deckSize);
     }
 
     public Game(Player[] players, Dictionary<string, IEffect?> specialCards)
@@ -125,9 +122,9 @@ public class Game
         SpecialCards = specialCards;
         Round = 0;
         TotalRounds = Players.Length - 1;
-        ActiveEffects = new List<IEffect?>();
         Bench = new List<Player>();
         Out = new List<Player>();
+        Deck = new Deck(_deckSize);
     }
 
     public void StartGame(int round = 1)
@@ -140,7 +137,10 @@ public class Game
             Bench = [];
         }
 
-        Deck = new Deck(54);
+        if (Deck.GetCount() != _deckSize) 
+        {
+            Deck = new Deck(_deckSize);
+        }
 
         Deck.Shuffle();
         DealCards(["8", "Jack", "Ace", "7", "Joker"]);
@@ -326,12 +326,6 @@ public class Game
     {
         //TODO: find out why we dealing more cards than needed => resolved
         //Resolution: StartGame was called by each player, leading to card miscount
-        if (Deck == null)
-        {
-            Console.WriteLine("No deck. Panic!!");
-            return;
-        }
-
         foreach (Player player in Players)
         {
             player.Hand = Deck.DealCards(ranks);
@@ -344,12 +338,6 @@ public class Game
         if (!SpecialCards.TryGetValue(cardRank, out IEffect? effect) || effect == null) return;
         await effect.Execute(this);
         _pivot = directionBefore != Clockwise;
-
-        // Add effect to active effects if not single-turn
-        if (effect.Frequency != EffectFrequency.SingleTurn)
-        {
-            ActiveEffects.Add(effect);
-        }
     }
 
     private void SetNext()
