@@ -8,7 +8,7 @@ Crazy 8 with friends regardless of geographical distances. I developed this game
 with my friends who live in different cities. I hope you find this project as exciting as I do. Contributions and 
 collaborations are more than welcome!
 
-![img.png](img.png)
+![image](https://github.com/user-attachments/assets/bd3f58e4-8fd4-4cf0-93a0-44fb34e36145)
 ### Technologies Used
 
 - **C# .NET 7.0**: The core language and framework used for building the backend.
