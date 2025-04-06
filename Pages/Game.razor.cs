@@ -23,7 +23,7 @@ public partial class Game : ComponentBase
     private HubConnection _hubConnection;
     private Player? _turn;
     private Card? _faceUp;
-    private List<Player> _players = new();
+    private List<Player> _players = [];
     private Card[] _myCards = Array.Empty<Card>();
     private int _choice = 0;
     private bool _dialogIsOpen = false;

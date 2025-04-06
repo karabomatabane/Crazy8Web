@@ -1,59 +1,72 @@
 ﻿@page "/lobby/{gameId?}"
-<div class="form-container center">
-    <!-- Game UI goes here -->
-    <MatH3>@( _isMine ? "You have created a game" : "You joined the game")</MatH3>
-    
-    @if (_isMine)
-    {
-        <MatH4>Copy the link below to invite others</MatH4>
-        <p>
-            <MatTextField @bind-Value="@GameId" Label="Code" Outlined="true" Disabled="true" Style="width: 340px;"></MatTextField>
-            <MatButton OnClick="CopyToClip">Copy</MatButton>
-        </p>
-    }
+<div class="dark-container">
+    <div class="dark-card">
+        <!-- Game Status Header -->
+        <div class="status-header">
+            <h3 class="status-title">@(_isMine ? "Game Created" : "Game Joined")</h3>
+            <div class="status-divider"></div>
+        </div>
 
-    @if (_players?.Count > 0)
-    {
-        <MatH4>Players Joined</MatH4>
-
-
-        <table class="table table-responsive w-25 center">
-            <thead>
-            <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Ready</th>
-            </tr>
-            </thead>
-            @foreach (Player player in _players)
-            {
-                <tr scope="row">
-                    <td>@player.Name</td>
-                    @if (readyPlayers.Contains(player.PlayerId) || IsOwner(player.PlayerId))
-                    {
-                        <td>
-                            <MatIcon Icon="check_circle" Style="color: #4caf50"></MatIcon>
-                        </td>
-                    }
-                    else
-                    {
-                        <td>
-                            <MatIcon Icon="check_circle_outline" Style="color: #4caf50"></MatIcon>
-                        </td>
-                    }
-                </tr>
-            }
-        </table>
-        if (_isMine)
+        @if (_isMine)
         {
-            <MatButton Raised="true" Disabled="readyPlayers.Count < _players.Count" class="btn me-2" OnClick="Start">
-                Start
-            </MatButton>
+            <div class="game-code-section">
+                <p class="instruction-text">Share this code with friends:</p>
+                <div class="code-copy-container">
+                    <div class="code-input-container">
+                        <input type="text"
+                               class="code-input"
+                               value="@GameId"
+                               disabled/>
+                    </div>
+                    <button class="copy-button" @onclick="CopyToClip">
+                        <MatIcon Icon="content_copy" Class="copy-icon"></MatIcon>
+                    </button>
+                </div>
+            </div>
         }
-        else
-        {
-            <MatButton Raised="true" class="btn btn-primary me-2"
-                       OnClick="Start">Ready</MatButton>
-        }
-    }
 
+        @if (_players?.Count > 0)
+        {
+            <div class="players-section">
+                <h4 class="section-title">Players</h4>
+                <div class="players-table">
+                    @foreach (Player player in _players)
+                    {
+                        <div class="player-row">
+                            <span class="player-name">@player.Name</span>
+                            <span class="player-status">
+                                @if (readyPlayers.Contains(player.PlayerId) || IsOwner(player.PlayerId))
+                                {
+                                    <MatIcon Icon="check_circle" Class="ready-icon"></MatIcon>
+                                }
+                                else
+                                {
+                                    <MatIcon Icon="radio_button_unchecked" Class="pending-icon"></MatIcon>
+                                }
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="action-buttons">
+                @if (_isMine)
+                {
+                    <Button Raised="true"
+                               Disabled="@(readyPlayers.Count < _players.Count)"
+                               Class="action-button primary"
+                               @onclick="Start">
+                        Start Game
+                    </Button>
+                }
+                else
+                {
+                    <Button 
+                               Class="action-button primary"
+                               @onclick="Start">
+                        @(Owner?.PlayerId != null && readyPlayers.Contains(Owner.PlayerId) ? "Waiting..." : "Ready")
+                    </Button>   
+                }
+            </div>
+        }
+    </div>
 </div>

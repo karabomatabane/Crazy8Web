@@ -233,6 +233,10 @@ public class Game
                            string.IsNullOrEmpty(RequiredSuit) &&
                            (playerChoice.Suit == faceUp.Suit || // matches suit
                             playerChoice.Rank == faceUp.Rank); // matches rank
+        Console.WriteLine("Is player choice a call effect? " + (cardEffect is CallEffect));
+        Console.WriteLine("Player's choice: " + playerChoice.Rank);
+        Console.WriteLine("Face up card: " + faceUp.Rank);
+        Console.WriteLine("Required suit: " + RequiredSuit);
         if (Attacks > 0)
         {
             if (cardEffect is not AttackEffect)
@@ -256,7 +260,7 @@ public class Game
                 return true;
             }
         }
-        else if (!string.IsNullOrEmpty(RequiredSuit)) RequiredSuit = string.Empty;
+        else if (!string.IsNullOrEmpty(RequiredSuit) && cardEffect is not CallEffect) RequiredSuit = string.Empty;
 
         if (!isValidMove && cardEffect is not AttackEffect) return false;
         Deck.AddCard(playerChoice);

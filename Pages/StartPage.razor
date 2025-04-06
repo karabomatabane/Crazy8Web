@@ -1,40 +1,62 @@
 ﻿@page "/start"
-<div class="container">
+<div class="start-container">
 
     @if (Owner == null)
     {
-        <div class="form-container center">
-            <h3 class="mb-2">Player information</h3>
-            @* https://stackoverflow.com/questions/77125142/blazor-server-protectedsessionstorage-setasync-returns-task-cancled-exception-wh *@
-            <div class="form">
-                <div class="form-group">
-                    <p>
-                        <MatTextField @bind-Value="@_inputName" Label="Name" Id="playerName" Outlined="true"></MatTextField>
-                    </p>
-                    <MatButton Raised="true" class="mt-2" Disabled="@string.IsNullOrEmpty(_inputName)"
-                               @onclick="CreatePlayer">
-                        Save
-                    </MatButton>
+        <div class="player-form">
+            <div class="form-card">
+                <MatH3 class="form-title">Player Setup</MatH3>
+                <div class="form-content">
+                    <MatTextField
+                        @bind-Value="@_inputName"
+                        Label="Your Name"
+                        FullWidth="true"
+                        Outlined="true"
+                        Class="name-input">
+                    </MatTextField>
+                    <div class="form-actions">
+                        <MatButton
+                            Raised="true"
+                            Class="primary-button"
+                            Disabled="@string.IsNullOrEmpty(_inputName)"
+                            @onclick="CreatePlayer">
+                            Continue
+                        </MatButton>
+                    </div>
                 </div>
             </div>
         </div>
     }
     else
     {
-        <MatH3 class="center light-text">Hi @Owner.Name,</MatH3>
-        <MatH3 class="center mb-2 light-text">What you want do want to do?</MatH3>
+        <div class="welcome-screen">
+            <div class="welcome-header">
+                <MatH3 class="welcome-title">Welcome back, <span class="player-name">@Owner.Name</span></MatH3>
+                <p class="welcome-subtitle">What would you like to do today?</p>
+            </div>
 
-        <div class="center mt-2">
-            <MatButton Raised="true" class="btn me-2" @onclick="CreateGame">
-                Create Game
-            </MatButton>
+            <div class="action-buttons">
+                <Button Raised="true" Class="action-button" @onclick="CreateGame">
+                    <span class="button-icon">
+                        <MatIcon Icon="videogame_asset"></MatIcon>
+                    </span>
+                    <span>Create New Game</span>
+                </Button>
 
-            <MatButton Raised="true" class="btn me-2" @onclick="PrepareToJoin">
-                Join Game
-            </MatButton>
-            <MatButton Raised="true" class="btn me-2" @onclick="ChangeName">
-                Change Name
-            </MatButton>
+                <Button Raised="true" Class="action-button" @onclick="PrepareToJoin">
+                    <span class="button-icon">
+                        <MatIcon Icon="group"></MatIcon>
+                    </span>
+                    <span>Join Existing Game</span>
+                </Button>
+
+                <Button Raised="true" Class="action-button secondary" @onclick="ChangeName">
+                    <span class="button-icon">
+                        <MatIcon Icon="edit"></MatIcon>
+                    </span>
+                    <span>Change Name</span>
+                </Button>
+            </div>
         </div>
     }
 </div>

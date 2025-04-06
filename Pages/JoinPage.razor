@@ -1,9 +1,20 @@
 ﻿@page "/join/{playerId}"
-<div class="center form-container join-form">
-    <MatH3>Join a game</MatH3>
-    <MatH4>Enter game code below</MatH4>
-    <p>
-        <MatTextField @bind-Value="@_joiningId" Label="Code" Outlined="true" Style="width: 340px;"></MatTextField>
-        <MatButton OnClick="JoinGame">Join</MatButton>
-    </p>
+<div class="dark-container">
+    <div class="dark-card">
+        <div class="status-header no-margin-tb">
+            <h3 class="join-title">Join a Game</h3>
+            <div class="status-divider"></div>
+            <p class="instruction-text mt-4">Enter the game code below:</p>
+        </div>
+
+        <div class="join-input-group">
+            <input type="text"
+                   class="game-code-input"
+                   @bind="@_joiningId"
+                   placeholder="Game Code"/>
+            <button class="join-button" @onclick="JoinGame">
+                Join
+            </button>
+        </div>
+    </div>
 </div>

@@ -1,0 +1,21 @@
+@if (IsOpen)
+{
+    <div class="game-dialog-overlay" @onclick="HandleBackdropClick">
+        <div class="game-dialog" @onclick:stopPropagation>
+            <div class="dialog-title">@Title</div>
+            <div class="dialog-content">
+                @ChildContent
+            </div>
+            <div class="dialog-actions">
+                @if (ShowCancel)
+                {
+                    <button class="dialog-button dialog-secondary" @onclick="OnCancel">@CancelText</button>
+                }
+                @if (ShowConfirm)
+                {
+                    <button class="dialog-button dialog-primary" @onclick="OnConfirm">@ConfirmText</button>
+                }
+            </div>
+        </div>
+    </div>
+}

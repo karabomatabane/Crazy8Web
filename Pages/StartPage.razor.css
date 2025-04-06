@@ -1,1 +1,112 @@
-﻿
+﻿/* Base Container Styles */
+.start-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Player Form Styles */
+.player-form {
+    width: 100%;
+    max-width: 500px;
+}
+
+.form-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+
+.form-title {
+    color: #333;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.name-input {
+    margin-bottom: 1.5rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.primary-button {
+    background-color: #4361ee;
+    color: white;
+    min-width: 150px;
+}
+
+/* Action Buttons Grid */
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.25rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Button Content */
+.button-icon {
+    font-size: 1.2rem;
+}
+
+.button-icon ::deep .mud-icon-root {
+    font-size: 1.5rem;
+    color: inherit;
+}
+
+.button-text {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Welcome Screen Styles */
+.welcome-screen {
+    width: 100%;
+    text-align: center;
+}
+
+.welcome-header {
+    margin-bottom: 3rem;
+}
+
+.welcome-title {
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.player-name {
+    color: #4361ee;
+    font-weight: 600;
+}
+
+.welcome-subtitle {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .start-container {
+        padding: 1rem;
+    }
+
+    .action-buttons {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .action-button {
+        min-height: 70px;
+        padding: 0.75rem;
+    }
+}

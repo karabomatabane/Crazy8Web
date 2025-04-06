@@ -2,14 +2,16 @@
 @using Crazy8.Constants
 @using Crazy8Web.Utils
 <div class="container">
-    @if (_players != null && Owner != null)
+    @if (Owner != null)
     {
         <div class="chips-container">
             <MatChipSet class="player-chips">
                 @foreach (Player player in _players)
                 {
-                    <MatChip Label="@GetPlayerName(player)" LeadingIcon="person"
-                             Style="@(player == _turn ? "background-color:#4caf50" : "background-color: #e0e0e0")">
+                    <MatChip Label="@GetPlayerName(player)"
+                             LeadingIcon="person"
+                             Style="@(player == _turn ? "background-color: rgba(76, 175, 80, 0.2); border: 1px solid #4caf50; color: #e0e0e0" : "background-color: #1e293b; border: 1px solid #3a3a4a; color: #a0aec0")"
+                             Class="@(player == _turn ? "active-player-chip" : "player-chip")">
                     </MatChip>
                 }
             </MatChipSet>
@@ -18,111 +20,102 @@
                 <div class="anim-chip">
                     <MatChipSet class="attacks-chip">
                         <MatChip Label="@GetAttacks()" LeadingIcon="bolt"
-                                 Style="background-color:#f44336;">
+                                 Style="background-color:#2196F3;">
                         </MatChip>
                     </MatChipSet>
                 </div>
             }
         </div>
 
-        <div class="demo-mat-card">
-            <div class="demo-mat-card-content desk-header">
-                <MatHeadline6 class="demo-mat-card-clean-margin center">
-                    Table
-                </MatHeadline6>
+        <div class="play-area">
+            <div class="table-surface">
+                <h3 class="table-label">Table</h3>
             </div>
-            <div class="desk-content">
+            <div class="card-display desk-content hand-container">
+                <img src="assets/cards/back.png"
+                     class="card-image"
+                     alt="Card back">
+                @if (_requireSuit)
+                {
+                    Console.WriteLine("Required suit: " + GameService.GetRequiredSuit());
+                    <img src="@Utility.GetCardImage(GameService.GetRequiredSuit()!.ToLower())"
+                         class="card-image active-card"
+                         alt="">
+                }
+                else
+                {
+                    <img src="@_faceUp?.Image"
+                         class="card-image active-card"
+                         alt="Face up card">
+                }
+            </div>
+        </div>
+        <div class="play-area round-bottom-border">
+            <div class="table-surface">
+                <h3 class="table-label">Your Hand</h3>
+            </div>
+            <div class="desk-content hand-container">
                 <div class="card">
-                    <img src="assets/cards/back.png" alt="@_faceUp?.Rank of @_faceUp?.Suit">
-                    @if (_requireSuit && !string.IsNullOrEmpty(GameService.GetRequiredSuit()))
+                    @for (int i = 0; i < _myCards.Length; i++)
                     {
-                        <img src="@Utility.GetCardImage(GameService.GetRequiredSuit()!.ToLower())"
-                             alt="GameService.GetRequiredSuit()!">
-                    }
-                    else
-                    {
-                        <img src="@_faceUp?.Image" alt="@_faceUp?.Rank of @_faceUp?.Suit" class="table-card">
+                        Card card = _myCards[i];
+                        bool isSelected = _tempChoice == i;
+                        int pos = i;
+                        <img src="@card?.Image" @onclick="() => SelectCard(pos)"
+                             class="fan-card hand-card @(IsMyTurn() ? isSelected ? "play-card selected" : "play-card" : "no-play")" alt="@card?.Rank of @card?.Suit">
                     }
                 </div>
             </div>
         </div>
 
-        @if (_myCards != null)
-        {
-            <div class="demo-mat-card">
-                <div class="demo-mat-card-content desk-header">
-                    <MatHeadline6 class="demo-mat-card-clean-margin center">
-                        Your Hand
-                    </MatHeadline6>
-                </div>
-                <div class="desk-content hand-container">
-                    <div class="card">
-                        @for (int i = 0; i < _myCards.Length; i++)
-                        {
-                            Card card = _myCards[i];
-                            bool isSelected = _tempChoice == i;
-                            int pos = i;
-                            <img src="@card?.Image" @onclick="() => SelectCard(pos)"
-                                 class="fan-card @(IsMyTurn() ? isSelected ? "play-card selected" : "play-card" : "no-play")" alt="@card?.Rank of @card?.Suit">
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <div class="button-container">
-                <MatButton Raised="true" OnClick="Pick" class="btnPick" Disabled="!IsMyTurn()">Pick</MatButton>
-            </div>
-        }
+        <div class="button-container">
+            <Button @onclick="Pick" class="btnPi    ck action-button primary" Disabled="@(!IsMyTurn())">Draw Card</Button>
+        </div>
     }
-    <MatDialog @bind-IsOpen="@_dialogIsOpen" Id="dialog-box">
+    <CustomDialog @bind-IsOpen="@_dialogIsOpen"
+                  Title="Crazy 8"
+                  ConfirmText="OK"
+                  ShowCancel="IsMyTurn()"
+                  ShowConfirm="IsMyTurn()"
+                  OnConfirm="OkClick">
         @if (IsMyTurn())
         {
-            <MatDialogTitle>Crazy 8</MatDialogTitle>
-            <MatDialogContent>
-                <p>What suit do you want?</p>
-                <MatSelectValue Label="Suit" @bind-Value="@_dialogSuit" Items="@Const.Suits"
-                                ValueSelector=@(name => name)>
-                </MatSelectValue>
-            </MatDialogContent>
-            <MatDialogActions>
-                <MatButton OnClick="@OkClick">OK</MatButton>
-            </MatDialogActions>
+            <p>What suit do you want?</p>
+            <select @bind="@_dialogSuit" class="suit-select">
+                @foreach (string suit in Const.Suits)
+                {
+                    <option value="@suit">@suit</option>
+                }
+            </select>
         }
         else
         {
-            <MatDialogContent>
-                <MatH4>Please wait for player to pick a suit...</MatH4>
-            </MatDialogContent>
+            string currentPlayer = _turn != null ? GetPlayerName(_turn) : "player";
+            <MatH4>Please wait for @currentPlayer to pick a suit...</MatH4>
         }
-    </MatDialog>
-    <MatDialog @bind-IsOpen="@_gameHasEnded">
-        <MatDialogContent>
-            <div class="dialog-subtitle">The game has ended</div>
-            <div class="results-title">Results</div>
-            @if (_results != null)
-            {
-            <div class="results-list">
-                <ul>
-                    @for (int i = 0; i < _results.Count; i++)
+    </CustomDialog>
+    <CustomDialog @bind-IsOpen="@_gameHasEnded"
+                  Title="Game Over"
+                  ConfirmText="Rematch"
+                  CancelText="Leave"
+                  OnConfirm="Rematch"
+                  OnCancel="LeaveGame">
+        <div class="results-list">
+            <ul>
+                @for (int i = 0; i < _results.Count; i++)
+                {
+                Player player = _results[i];
+                int rank = i + 1;
+                <li class="result-item @(rank == 1 ? "highlight-first" : "")">
+                    <span class="rank">@rank.</span>
+                    <span class="player-name">@(player.PlayerId == Owner?.PlayerId ? "You" : player.Name)</span>
+                    @if (rank == 1)
                     {
-                    Player player = _results[i];
-                    int rank = i + 1;
-                    <li class="result-item @(rank == 1 ? "highlight-first" : "")">
-                        <span class="rank">@rank.</span>
-                        <span class="player-name">@(player.PlayerId == Owner?.PlayerId ? "You" : player.Name)</span>
-                        @if (rank == 1)
-                        {
-                        <span class="winner-icon">🏆</span>
-                        }
-                    </li>
+                    <span class="winner-icon">🏆</span>
                     }
-                </ul>
-            </div>
-            }
-            <div class="dialog-actions">
-                <MatButton OnClick="@Rematch" class="rematch-button">Rematch</MatButton>
-                <MatButton OnClick="@LeaveGame" class="leave-button">Leave</MatButton>
-            </div>
-        </MatDialogContent>
-    </MatDialog>
+                </li>
+                }
+            </ul>
+        </div>
+    </CustomDialog>
 </div>

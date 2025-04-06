@@ -1,1 +1,146 @@
-﻿
+﻿/* Game Code Section */
+.game-code-section {
+    margin-bottom: 2rem;
+}
+
+.code-copy-container {
+    display: flex;
+    width: 340px;
+    margin: 0 auto;
+    border: 1px solid #3a3a4a;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #252535;
+}
+
+.code-input-container {
+    position: relative;
+    flex-grow: 1;
+    padding: 12px;
+}
+
+.code-label {
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    font-size: 11px;
+    padding: 0 4px;
+    background: #252535;
+    color: #a0aec0;
+}
+
+.code-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: white;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 4px 0 0 0;
+}
+
+.code-input:focus {
+    outline: none;
+}
+
+.copy-button {
+    background: #3a3a4a;
+    border: none;
+    border-left: 1px solid #3a3a4a;
+    color: white;
+    padding: 0 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.copy-button:hover {
+    background: #4a4a5a;
+}
+
+.copy-icon {
+    font-size: 16px;
+}
+
+/* Players Section */
+.players-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    color: #e0e0e0;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.players-table {
+    background-color: #2d2d3d;
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.player-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #3a3a4a;
+}
+
+.player-row:last-child {
+    border-bottom: none;
+}
+
+.player-name {
+    color: #e0e0e0;
+}
+
+.ready-icon {
+    color: #4caf50 !important;
+}
+
+.pending-icon {
+    color: #ff9800 !important;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.start-button, .ready-button {
+    min-width: 180px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.start-button {
+    background-color: #7c4dff;
+    color: white;
+}
+
+.ready-button {
+    background-color: #4caf50;
+    color: white;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+    .dark-card {
+        padding: 1.5rem;
+    }
+
+    .player-row {
+        padding: 0.5rem;
+    }
+
+    .start-button, .ready-button {
+        min-width: 160px;
+    }
+}

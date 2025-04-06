@@ -9,14 +9,14 @@ namespace Crazy8Web.Services;
 public class GameService
 {
     private readonly IHubContext<GameHub> _hubContext;
-    private Game _game;
-    private List<string> readyPlayers;
+    private Game _game = null!;
+    private readonly List<string> _readyPlayers;
     private TaskCompletionSource<string>? _suitSelectionCompletionSource;
 
     public GameService(IHubContext<GameHub> hubContext)
     {
         _hubContext = hubContext;
-        readyPlayers = new List<string>();
+        _readyPlayers = new List<string>();
     }
 
     private async void OnFaceUpCardChanged(Card card)
@@ -68,7 +68,7 @@ public class GameService
         return _suitSelectionCompletionSource.Task;
     }
 
-    public async void ReceiveSuitSelection(string selectedSuit)
+    public void ReceiveSuitSelection(string selectedSuit)
     {
         if (_suitSelectionCompletionSource == null) return;
         _suitSelectionCompletionSource.SetResult(selectedSuit);
@@ -106,18 +106,18 @@ public class GameService
         return players;
     }
 
-    public List<string> GetReadyPlayers() => readyPlayers;
+    public List<string> GetReadyPlayers() => _readyPlayers;
 
     public void PlayerReady(string playerId)
     {
-        readyPlayers.Add(playerId);
+        _readyPlayers.Add(playerId);
         _hubContext.Clients.All.SendAsync(Const.PlayerReady, playerId);
     }
 
     public void StartSession()
     {
         _hubContext.Clients.All.SendAsync(Const.StartSession);
-        if (_game.Deck != null) _game.Deck.VibeCheckEvent += DeckOnVibeCheckEvent;
+        _game.Deck.VibeCheckEvent += DeckOnVibeCheckEvent;
     }
 
     public Card[] GetPlayerCards(string playerId)
