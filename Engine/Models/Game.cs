@@ -186,9 +186,8 @@ public class Game
                 Round++;
                 if (Round >= TotalRounds)
                 {
-                    List<Player> results = [..Bench];
                     Out.Reverse();
-                    results.AddRange(Out);
+                    List<Player> results = [..Bench, ..Out];
                     EndGame(results);
                 } else
                 {

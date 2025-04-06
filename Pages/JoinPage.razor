@@ -7,12 +7,13 @@
             <p class="instruction-text mt-4">Enter the game code below:</p>
         </div>
 
-        <div class="join-input-group">
+        <div class="dark-input-group">
             <input type="text"
-                   class="game-code-input"
+                   class="dark-code-input"
                    @bind="@_joiningId"
+                     @onkeyup="HandleKeyUp"
                    placeholder="Game Code"/>
-            <button class="join-button" @onclick="JoinGame">
+            <button class="dark-button" @onclick="JoinGame">
                 Join
             </button>
         </div>

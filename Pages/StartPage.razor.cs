@@ -3,6 +3,7 @@ using Crazy8Web.Services;
 using MatBlazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 
@@ -20,19 +21,21 @@ public partial class StartPage : ComponentBase
     private HubConnection _hubConnection;
     private Player? Owner { get; set; }
     private static string? _inputName;
+    private bool _isPlayerSetup;
     private const string OwnerKey = "owner";
-    
+
     protected override async Task OnInitializedAsync()
     {
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(NavigationManager.ToAbsoluteUri("/gameHub"))
             .Build();
         _inputName = string.Empty;
+        _isPlayerSetup = true;
 
         await _hubConnection.StartAsync();
         await LoadOwnerFromSessionAsync();
     }
-    
+
     private async Task LoadOwnerFromSessionAsync()
     {
         try
@@ -41,6 +44,7 @@ public partial class StartPage : ComponentBase
             Owner = result.Value;
             if (Owner != null)
             {
+                _isPlayerSetup = false;
                 StateHasChanged(); // Force re-render to update UI
             }
         }
@@ -49,13 +53,14 @@ public partial class StartPage : ComponentBase
             Console.WriteLine(e);
         }
     }
+
     private void PrepareToJoin()
     {
         // TODO: Use game id to add player to a game
         if (Owner == null) return;
         NavigationManager.NavigateTo($"/join/{Owner.PlayerId}");
     }
-    
+
 
     private void CreateGame()
     {
@@ -67,13 +72,31 @@ public partial class StartPage : ComponentBase
     private async Task CreatePlayer()
     {
         if (string.IsNullOrEmpty(_inputName)) return;
-        Owner = new Player(_inputName);
+        if (Owner == null)
+        {
+            Owner = new Player(_inputName);
+        }
+        else
+        {
+            Owner.Name = _inputName;
+            _isPlayerSetup = false;
+            StateHasChanged();
+        }
         await SessionStore.SetAsync(OwnerKey, Owner);
     }
-
-    private void ChangeName()
+    
+    private async Task HandleKeyUp(KeyboardEventArgs e)
     {
-        Owner = null;
+        if (e.Key == "Enter" && !string.IsNullOrEmpty(_inputName))
+        {
+            await CreatePlayer();
+        }
+    }
+
+    private void EditName()
+    {
+        if (Owner != null) _inputName = Owner.Name;
+        _isPlayerSetup = true;
         StateHasChanged();
     }
 
@@ -81,5 +104,4 @@ public partial class StartPage : ComponentBase
     {
         await _hubConnection.DisposeAsync();
     }
-
 }

@@ -3,16 +3,10 @@ using Crazy8.Utils;
 
 namespace Crazy8.Models;
 
-public class Player
+public class Player(string name)
 {
-    public Player(string name)
-    {
-        PlayerId = Guid.NewGuid().ToString();
-        Name = name;
-    }
-
-    public string PlayerId { get; set; }
-    public string Name { get; set; }
+    public string PlayerId { get; set; } = Guid.NewGuid().ToString();
+    public string Name { get; set; } = name;
     public Card[]? Hand { get; set; }
 
     public Card? PlayCard()

@@ -3,6 +3,7 @@ using Crazy8.Models;
 using Crazy8Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Crazy8Web.Pages;
 
@@ -45,5 +46,13 @@ public partial class JoinPage : ComponentBase
         if (Owner == null || string.IsNullOrEmpty(_joiningId)) return;
         GameService.JoinGame(Owner, _joiningId);
         NavigationManager.NavigateTo($"lobby/{GameService.GetGameId()}");
+    }
+
+    private void HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            JoinGame();
+        }
     }
 }

@@ -37,10 +37,9 @@
                      alt="Card back">
                 @if (_requireSuit)
                 {
-                    Console.WriteLine("Required suit: " + GameService.GetRequiredSuit());
                     <img src="@Utility.GetCardImage(GameService.GetRequiredSuit()!.ToLower())"
                          class="card-image active-card"
-                         alt="">
+                         alt="Required suit">
                 }
                 else
                 {
@@ -61,8 +60,8 @@
                         Card card = _myCards[i];
                         bool isSelected = _tempChoice == i;
                         int pos = i;
-                        <img src="@card?.Image" @onclick="() => SelectCard(pos)"
-                             class="fan-card hand-card @(IsMyTurn() ? isSelected ? "play-card selected" : "play-card" : "no-play")" alt="@card?.Rank of @card?.Suit">
+                        <img src="@card.Image" @onclick="() => SelectCard(pos)"
+                             class="fan-card hand-card @(IsMyTurn() ? isSelected ? "play-card selected" : "play-card" : "no-play")" alt="@card.Rank of @card.Suit">
                     }
                 </div>
             </div>
@@ -102,18 +101,21 @@
                   OnCancel="LeaveGame">
         <div class="results-list">
             <ul>
-                @for (int i = 0; i < _results.Count; i++)
+                @if (_results != null)
                 {
-                Player player = _results[i];
-                int rank = i + 1;
-                <li class="result-item @(rank == 1 ? "highlight-first" : "")">
-                    <span class="rank">@rank.</span>
-                    <span class="player-name">@(player.PlayerId == Owner?.PlayerId ? "You" : player.Name)</span>
-                    @if (rank == 1)
+                    for (int i = 0; i < _results.Count; i++)
                     {
-                    <span class="winner-icon">🏆</span>
+                        Player player = _results[i];
+                        int rank = i + 1;
+                        <li class="result-item @(rank == 1 ? "highlight-first" : "")">
+                            <span class="rank">@(rank).</span>
+                            <span class="player-name">@(player.PlayerId == Owner?.PlayerId ? "You" : player.Name)</span>
+                            @if (rank == 1)
+                            {
+                                <span class="winner-icon">🏆</span>
+                            }
+                        </li>
                     }
-                </li>
                 }
             </ul>
         </div>

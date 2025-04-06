@@ -1,28 +1,27 @@
 ﻿@page "/start"
 <div class="start-container">
 
-    @if (Owner == null)
+    @if (_isPlayerSetup)
     {
-        <div class="player-form">
-            <div class="form-card">
-                <MatH3 class="form-title">Player Setup</MatH3>
-                <div class="form-content">
-                    <MatTextField
-                        @bind-Value="@_inputName"
-                        Label="Your Name"
-                        FullWidth="true"
-                        Outlined="true"
-                        Class="name-input">
-                    </MatTextField>
-                    <div class="form-actions">
-                        <MatButton
-                            Raised="true"
-                            Class="primary-button"
-                            Disabled="@string.IsNullOrEmpty(_inputName)"
-                            @onclick="CreatePlayer">
-                            Continue
-                        </MatButton>
-                    </div>
+        <div class="dark-container">
+            <div class="dark-card">
+                <div class="status-header no-margin-tb">
+                    <h3 class="join-title">Player Setup</h3>
+                    <div class="status-divider"></div>
+                    <p class="instruction-text mt-4">Enter your name below:</p>
+                </div>
+                <div class="dark-input-group">
+                    <input
+                        type="text"
+                        class="dark-code-input"
+                        @bind-value="@_inputName"
+                        @onkeyup="HandleKeyUp"
+                        placeholder="Your name"/>
+                    <button
+                        disabled="@string.IsNullOrEmpty(_inputName)"
+                        class="dark-button" @onclick="CreatePlayer">
+                        Continue
+                    </button>
                 </div>
             </div>
         </div>
@@ -36,26 +35,26 @@
             </div>
 
             <div class="action-buttons">
-                <Button Raised="true" Class="action-button" @onclick="CreateGame">
+                <button Raised="true" Class="action-button" @onclick="CreateGame">
                     <span class="button-icon">
                         <MatIcon Icon="videogame_asset"></MatIcon>
                     </span>
                     <span>Create New Game</span>
-                </Button>
+                </button>
 
-                <Button Raised="true" Class="action-button" @onclick="PrepareToJoin">
+                <button Raised="true" Class="action-button" @onclick="PrepareToJoin">
                     <span class="button-icon">
                         <MatIcon Icon="group"></MatIcon>
                     </span>
                     <span>Join Existing Game</span>
-                </Button>
+                </button>
 
-                <Button Raised="true" Class="action-button secondary" @onclick="ChangeName">
+                <button Raised="true" Class="action-button secondary" @onclick="EditName">
                     <span class="button-icon">
                         <MatIcon Icon="edit"></MatIcon>
                     </span>
                     <span>Change Name</span>
-                </Button>
+                </button>
             </div>
         </div>
     }
