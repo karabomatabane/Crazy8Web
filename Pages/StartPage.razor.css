@@ -85,28 +85,46 @@
 }
 
 .player-name {
-    color: #4361ee;
+    background: linear-gradient(90deg, rgba(54, 78, 190, 1) 0%, rgba(50, 113, 184, 1) 32%, rgba(255, 0, 97, 1) 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
     font-weight: 600;
+    display: inline-block;
+    padding: 0 2px;
+    animation: gradient-pulse 8s ease infinite;
 }
 
-.welcome-subtitle {
-    color: #666;
-    font-size: 1.1rem;
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .start-container {
-        padding: 1rem;
+@keyframes gradient-pulse {
+    0% {
+        background-position: 0 50%;
     }
-
-    .action-buttons {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
+    50% {
+        background-position: 100% 50%;
     }
+    100% {
+        background-position: 0 50%;
 
-    .action-button {
-        min-height: 70px;
-        padding: 0.75rem;
+        .welcome-subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .start-container {
+                padding: 1rem;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .action-button {
+                min-height: 70px;
+                padding: 0.75rem;
+            }
+        }
     }
 }
