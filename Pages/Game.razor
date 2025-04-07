@@ -74,18 +74,31 @@
     <CustomDialog @bind-IsOpen="@_dialogIsOpen"
                   Title="Crazy 8"
                   ConfirmText="OK"
-                  ShowCancel="IsMyTurn()"
+                  ShowCancel="false"
                   ShowConfirm="IsMyTurn()"
+                  Class="@(_isPeeking ? "translucent" : "")"
                   OnConfirm="OkClick">
         @if (IsMyTurn())
         {
-            <p>What suit do you want?</p>
-            <select @bind="@_dialogSuit" class="suit-select">
-                @foreach (string suit in Const.Suits)
-                {
-                    <option value="@suit">@suit</option>
-                }
-            </select>
+            <p class="text-center">Which suit do you want?</p>
+            <div class="peek-button-container">
+                <button class="peek-button" @onclick="TogglePeek" title="Peek at your cards">
+                    <MatIcon Icon="@(_isPeeking ? "visibility_off" : "visibility")" 
+                             Class="visibility-icon"></MatIcon>
+                    <span class="peek-label">@(_isPeeking ? "Hide Cards" : "Peek at Cards")</span>
+                </button>
+            </div>
+            <div class="desk-content hand-container">
+                <div class="card">
+                    @foreach (string suit in Const.Suits)
+                    {
+                        <img src="@Utility.GetCardImage(suit.ToLower())"
+                             @onclick="() => SelectRequiredSuit(suit)"
+                             class="dialog-card-image @(suit == _dialogSuit ? "selected" : "")"
+                             alt="Required suit">
+                    }
+                </div>
+            </div>
         }
         else
         {

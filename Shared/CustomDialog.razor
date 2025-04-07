@@ -1,7 +1,7 @@
 @if (IsOpen)
 {
     <div class="game-dialog-overlay" @onclick="HandleBackdropClick">
-        <div class="game-dialog" @onclick:stopPropagation>
+        <div class="game-dialog @(Class ?? "")" @onclick:stopPropagation>
             <div class="dialog-title">@Title</div>
             <div class="dialog-content">
                 @ChildContent

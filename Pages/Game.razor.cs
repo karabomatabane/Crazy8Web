@@ -34,6 +34,7 @@ public partial class Game : ComponentBase
     private int _attacks = 0;
     private bool _gameHasEnded = false;
     private List<Player>? _results = null;
+    private bool _isPeeking = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -195,6 +196,13 @@ public partial class Game : ComponentBase
             _tempChoice = choice;
     }
 
+    private void SelectRequiredSuit(string suit)
+    {
+        if (!IsMyTurn()) return;
+        _dialogSuit = suit;
+        StateHasChanged();
+    }
+
     private async void PlayChoice()
     {
         if (_myCards == null)
@@ -210,6 +218,25 @@ public partial class Game : ComponentBase
     public async ValueTask DisposeAsync()
     {
         await _hubConnection.DisposeAsync();
+    }
+
+    private void TogglePeek()
+    {
+        _isPeeking = !_isPeeking;
+    
+        // Auto-disable peeking after a short time
+        if (_isPeeking)
+        {
+            _ = Task.Run(async () => {
+                await Task.Delay(3000);
+                await InvokeAsync(() => {
+                    _isPeeking = false;
+                    StateHasChanged();
+                });
+            });
+        }
+    
+        StateHasChanged();
     }
 
     private void Rematch()
