@@ -8,6 +8,7 @@ public class Player(string name)
     public string PlayerId { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = name;
     public Card[]? Hand { get; set; }
+    public bool HasCalledOutThisTurn { get; set; }
 
     public Card? PlayCard()
     {

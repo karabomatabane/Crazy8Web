@@ -5,26 +5,35 @@
     @if (Owner != null)
     {
         <div class="chips-container">
-            <MatChipSet class="player-chips">
+            <div class="player-chips">
                 @foreach (Player player in _players)
                 {
-                    <MatChip Label="@GetPlayerName(player)"
-                             LeadingIcon="person"
-                             Style="@(player == _turn ? "background-color: rgba(76, 175, 80, 0.2); border: 1px solid #4caf50; color: #e0e0e0" : "background-color: #1e293b; border: 1px solid #3a3a4a; color: #a0aec0")"
-                             Class="@(player == _turn ? "active-player-chip" : "player-chip")">
-                    </MatChip>
+                    <div @onclick="() => PenaliseForCardNumber(player.PlayerId)" class="player-chip @(player == _turn ? "active-player-chip" : "") @(player.Hand?.Length is < 4 and > 0 ? "can-click" : "")">
+                        <span class="material-icons icon leading-icon">person</span>
+                        <span class="player-name">@GetPlayerName(player)</span>
+                        @if (player.PlayerId != Owner?.PlayerId)
+                        {
+                            <span class="card-count-badge">@(player.Hand?.Length ?? 0)</span>
+                        }
+                    </div>
                 }
-            </MatChipSet>
-            @if (_attacks > 0)
-            {
-                <div class="anim-chip">
-                    <MatChipSet class="attacks-chip">
-                        <MatChip Label="@GetAttacks()" LeadingIcon="bolt"
-                                 Style="background-color:#2196F3;">
-                        </MatChip>
-                    </MatChipSet>
-                </div>
-            }
+            </div>
+            <div class="right-chips">
+                @if (_myCards.Length <= 3 && Owner?.HasCalledOutThisTurn == false)
+                {
+                    <div class="status-chip anim-chip can-click" @onclick="AnnounceCardCount">
+                        <span class="material-icons icon">volume_up</span>
+                    </div>
+                }
+
+                @if (_attacks > 0)
+                {
+                    <div class="status-chip anim-chip">
+                        <span class="material-icons icon">bolt</span>
+                        <span class="label">@GetAttacks()</span>
+                    </div>
+                }
+            </div>
         </div>
 
         <div class="play-area">
@@ -83,8 +92,9 @@
             <p class="text-center">Which suit do you want?</p>
             <div class="peek-button-container">
                 <button class="peek-button" @onclick="TogglePeek" title="Peek at your cards">
-                    <MatIcon Icon="@(_isPeeking ? "visibility_off" : "visibility")" 
-                             Class="visibility-icon"></MatIcon>
+                    <MatIcon Icon="@(_isPeeking ? "visibility_off" : "visibility")"
+                             Class="visibility-icon">
+                    </MatIcon>
                     <span class="peek-label">@(_isPeeking ? "Hide Cards" : "Peek at Cards")</span>
                 </button>
             </div>
@@ -109,6 +119,7 @@
     <CustomDialog @bind-IsOpen="@_gameHasEnded"
                   Title="Game Over"
                   ConfirmText="Rematch"
+                  ShowConfirm="_players.Count > 1"
                   CancelText="Leave"
                   OnConfirm="Rematch"
                   OnCancel="LeaveGame">

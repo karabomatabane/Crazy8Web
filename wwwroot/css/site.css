@@ -77,6 +77,14 @@ main {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+.icon {
+    font-size: 1.2rem !important;
+}
+
+.can-click {
+    cursor: pointer;
+}
+
 .btn-primary {
     background-color: var(--accent-color);
     border: none;
@@ -236,6 +244,7 @@ main {
 .mdc-chip__text {
     color: #e0e0e0 !important;
 }
+
 /* Custom Dialog System */
 .game-dialog-overlay {
     position: fixed;
@@ -262,8 +271,14 @@ main {
 }
 
 @keyframes dialog-fade-in {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .dialog-title {

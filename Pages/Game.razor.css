@@ -12,11 +12,75 @@
     gap: 8px;
 }
 
-.attacks-chip {
-    margin-left: auto;
+.player-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    background-color: #1e293b;
+    border: 1px solid #3a3a4a;
+    color: #a0aec0;
+    cursor: pointer;
+}
+
+.player-chip.active-player-chip {
+    background-color: rgba(76, 175, 80, 0.2);
+    border-color: #4caf50;
+    color: #e0e0e0;
+}
+
+.card-count-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #4caf50;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.leading-icon {
+    font-weight: bold;
+}
+
+.right-chips {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.status-chip {
+    background-color: #1e3a8a;
+    border: 1px solid #3b82f6;
+    color: #e0f2fe;
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-chip .icon {
+    font-size: 1rem;
+    color: #60a5fa;
+}
+
+.status-chip .label {
+    display: inline-block;
 }
 
 .anim-chip {
+    display: inline-flex;
     animation: pulsate 1.5s infinite;
 }
 

@@ -4,10 +4,8 @@ using Crazy8Web.Services;
 using MatBlazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Microsoft.AspNetCore.SignalR.Client;
-using TextCopy;
 
 namespace Crazy8Web.Pages;
 
@@ -35,7 +33,7 @@ public partial class Game : ComponentBase
     private bool _gameHasEnded = false;
     private List<Player>? _results = null;
     private bool _isPeeking = false;
-
+    
     protected override async Task OnInitializedAsync()
     {
         _hubConnection = new HubConnectionBuilder()
@@ -205,8 +203,7 @@ public partial class Game : ComponentBase
 
     private async void PlayChoice()
     {
-        if (_myCards == null)
-            return;
+        UpdateHasCalledOut(false);
         await GameService.ProgressGame(_myCards[_choice]);
     }
 
@@ -223,20 +220,32 @@ public partial class Game : ComponentBase
     private void TogglePeek()
     {
         _isPeeking = !_isPeeking;
-    
+
         // Auto-disable peeking after a short time
         if (_isPeeking)
         {
-            _ = Task.Run(async () => {
+            _ = Task.Run(async () =>
+            {
                 await Task.Delay(3000);
-                await InvokeAsync(() => {
+                await InvokeAsync(() =>
+                {
                     _isPeeking = false;
                     StateHasChanged();
                 });
             });
         }
-    
+
         StateHasChanged();
+    }
+
+    private void PenaliseForCardNumber(string playerId)
+    {
+        // TODO: Use _callOuts to decide if player must be penalised.
+    }
+
+    private void AnnounceCardCount()
+    {
+        UpdateHasCalledOut(true);
     }
 
     private void Rematch()
@@ -248,5 +257,17 @@ public partial class Game : ComponentBase
     {
         // Navigate to the home page
         NavigationManager.NavigateTo("/");
+    }
+
+    private void UpdateHasCalledOut(bool value)
+    {
+        if (Owner == null) return;
+        int index = _players.FindIndex(p => p.PlayerId == Owner.PlayerId);
+        if (index < 0)
+        {
+            throw new InvalidOperationException("Owner is not in the game!");
+        }
+        _players[index].HasCalledOutThisTurn = value;
+        Owner.HasCalledOutThisTurn = value;
     }
 }
