@@ -33,6 +33,8 @@ public partial class Game : ComponentBase
     private bool _gameHasEnded = false;
     private List<Player>? _results = null;
     private bool _isPeeking = false;
+    private bool _clickedRematch = false;
+    private int _rematchCount = 0;
     
     protected override async Task OnInitializedAsync()
     {
@@ -87,8 +89,24 @@ public partial class Game : ComponentBase
                 // TODO: Handle end game
                 _gameHasEnded = true;
                 _results = results;
+                _players = results;
                 StateHasChanged();
             });
+        });
+
+        _hubConnection.On(Const.RematchClicked, () =>
+        {
+            _rematchCount++;
+            if (_rematchCount == _players.Count && Owner != null && GameService.IsMine(Owner.PlayerId))
+            {
+                GameService.RestartGame(_players);
+            }
+        });
+        
+        _hubConnection.On(Const.RematchStarted, () =>
+        {
+            NavigationManager.NavigateTo("/board", true);
+            return Task.CompletedTask;
         });
 
         await _hubConnection.StartAsync();
@@ -250,11 +268,18 @@ public partial class Game : ComponentBase
 
     private void Rematch()
     {
-        // TODO: Start a new game from scratch with the same players
+        if (!_clickedRematch)
+        {
+            GameService.Rematch();
+        }
+        _clickedRematch = true;
+        Console.WriteLine($"Rematch count: {_rematchCount} - {_clickedRematch}");
     }
 
     private void LeaveGame()
     {
+        if (Owner == null) return;
+        _players.RemoveAll(p => p.PlayerId == Owner.PlayerId);
         // Navigate to the home page
         NavigationManager.NavigateTo("/");
     }

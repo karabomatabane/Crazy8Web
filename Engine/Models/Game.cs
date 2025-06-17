@@ -122,8 +122,8 @@ public class Game
         SpecialCards = specialCards;
         Round = 0;
         TotalRounds = Players.Length - 1;
-        Bench = new List<Player>();
-        Out = new List<Player>();
+        Bench = [];
+        Out = [];
         Deck = new Deck(_deckSize);
     }
 
@@ -274,11 +274,13 @@ public class Game
 
     public void AddPlayer(Player player)
     {
+        Console.WriteLine($"Adding: {player.Name} to {Players.Length}");
         if (Players.Contains(player)) return;
         Player[] players = Players;
         Array.Resize(ref players, players.Length + 1);
         players[^1] = player;
         Players = players;
+        Console.WriteLine($"Leaving us with: {Players.Length}");
     }
 
     public Player[] GetPlayers()

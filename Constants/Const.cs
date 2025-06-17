@@ -11,5 +11,7 @@ public static class Const
     public static readonly string ReceiveSuit = "ReceiveSuitSelection";
     public static readonly string PromptSuit = "PromptSuit";
     public static readonly string VibeCheck = "VibeCheck";
+    public static readonly string RematchStarted = "RematchStarted";
+    public static readonly string RematchClicked = "RematchClicked";
     public static readonly string EndGame = "EndGame";
 }

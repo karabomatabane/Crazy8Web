@@ -119,7 +119,7 @@
     <CustomDialog @bind-IsOpen="@_gameHasEnded"
                   Title="Game Over"
                   ConfirmText="Rematch"
-                  ShowConfirm="_players.Count > 1"
+                  ShowConfirm="_results?.Count > 1"
                   CancelText="Leave"
                   OnConfirm="Rematch"
                   OnCancel="LeaveGame">

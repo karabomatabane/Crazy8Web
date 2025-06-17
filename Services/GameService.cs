@@ -30,6 +30,32 @@ public class GameService
         // Notify clients about the player's turn
         await _hubContext.Clients.All.SendAsync(Const.PlayerTurn, playerId);
     }
+    
+    private void InitializeGame(Player owner, IEnumerable<Player>? additionalPlayers = null)
+    {
+        Dictionary<string, IEffect?> specialCards = new()
+        {
+            { "7", new JumpEffect() }, { "8", new CallEffect() }, { "Jack", new ReverseEffect() },
+            { "2", new AttackEffect() { Magnitude = 1, Immune = false } },
+            { "Joker", new AttackEffect() { Magnitude = 2, Immune = true } }
+        };
+
+        _game = new Game(owner, specialCards);
+
+        if (additionalPlayers != null)
+        {
+            foreach (Player player in additionalPlayers)
+            {
+                _game.AddPlayer(player);
+            }
+        }
+
+        _game.FaceUpCardChanged += OnFaceUpCardChanged;
+        _game.PlayerTurnChanged += OnPlayerTurnChanged;
+        _game.GameHasEnded += GameOnGameHasEnded;
+        CallEffect.SuitPrompted += OnSuitPrompted;
+    }
+
 
     public void CreateGame(Player owner)
     {
@@ -82,6 +108,23 @@ public class GameService
     public void StartGame()
     {
         _game.StartGame();
+    }
+
+    public void Rematch()
+    {
+        _hubContext.Clients.All.SendAsync(Const.RematchClicked);
+    }
+
+    public void RestartGame(List<Player> players)
+    {
+        if (players == null || players.Count == 0)
+            throw new InvalidOperationException("No players for rematch.");
+
+        Player owner = players[0];
+        IEnumerable<Player> additionalPlayers = players.Skip(1);
+        InitializeGame(owner, additionalPlayers);
+
+        _hubContext.Clients.All.SendAsync(Const.RematchStarted);
     }
 
     public void JoinGame(Player player, string gameId)
