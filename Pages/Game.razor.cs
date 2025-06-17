@@ -106,7 +106,6 @@ public partial class Game : ComponentBase
         _hubConnection.On(Const.RematchStarted, () =>
         {
             NavigationManager.NavigateTo("/board", true);
-            return Task.CompletedTask;
         });
 
         await _hubConnection.StartAsync();
