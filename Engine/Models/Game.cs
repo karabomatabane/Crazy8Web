@@ -4,96 +4,96 @@ namespace Crazy8.Models;
 
 public class Game
 {
-     /// <summary>
+    /// <summary>
     /// Event triggered when the face-up card changes
     /// </summary>
     public event Action<Card>? FaceUpCardChanged;
-    
+
     /// <summary>
     /// Event triggered when the current player's turn changes
     /// </summary>
     public event Action<string>? PlayerTurnChanged;
-    
+
     /// <summary>
     /// Event triggered when the game ends
     /// </summary>
     public event Action<List<Player>>? GameHasEnded;
-    
+
     /// <summary>
     /// Unique identifier for the game session
     /// </summary>
     public string GameId { get; private set; }
-    
+
     /// <summary>
     /// Array of currently active players in the game
     /// </summary>
     public Player[] Players { get; private set; }
-    
+
     /// <summary>
     /// Player ID of the game owner/creator
     /// </summary>
     public string Owner { get; set; }
-    
+
     /// <summary>
     /// The deck of cards used in the game
     /// </summary>
     public Deck Deck { get; set; }
-    
+
     /// <summary>
     /// Current round number
     /// </summary>
     private int Round { get; set; }
-    
+
     /// <summary>
     /// Total number of rounds to be played
     /// </summary>
     private int TotalRounds { get; }
-    
+
     /// <summary>
     /// Index of the player whose turn it currently is
     /// </summary>
     public int Turn { get; private set; }
-    
+
     /// <summary>
     /// Number of positions to advance on each turn
     /// </summary>
     public int Step { get; set; } = 1; // default step is 1
-    
+
     /// <summary>
     /// Direction of play (true for clockwise, false for counter-clockwise)
     /// </summary>
     public bool Clockwise { get; set; } = true; // default direction is clockwise
-    
+
     /// <summary>
     /// Players who have finished their cards for the current round
     /// </summary>
     private List<Player> Bench { get; set; }
-    
+
     /// <summary>
     /// Players who are out of the game completely
     /// </summary>
     private List<Player> Out { get; set; }
-    
+
     /// <summary>
     /// Number of accumulated attack points that next player must respond to or draw cards
     /// </summary>
     public int Attacks { get; set; }
-    
+
     /// <summary>
     /// Dictionary mapping card ranks to their special effects
     /// </summary>
     private Dictionary<string, IEffect?> SpecialCards { get; set; }
-    
+
     /// <summary>
     /// Suit that must be played in the next turn (e.g., after playing an 8)
     /// </summary>
     public string? RequiredSuit { get; set; }
-    
+
     /// <summary>
     /// Indicates whether the game is currently in progress
     /// </summary>
     public bool IsRunning { get; private set; }
-    
+
     /// <summary>
     /// Flag to handle special case in direction change for 2-player games
     /// </summary>
@@ -137,7 +137,7 @@ public class Game
             Bench = [];
         }
 
-        if (Deck.GetCount() != _deckSize) 
+        if (Deck.GetCount() != _deckSize)
         {
             Deck = new Deck(_deckSize);
         }
@@ -176,6 +176,8 @@ public class Game
         SetNext();
         if (!currentPlayer.HasCards())
         {
+            if (playerChoice != null && SpecialCards.TryGetValue(playerChoice.Rank, out IEffect? cardEffect) &&
+                cardEffect != null) return;
             Bench.Add(currentPlayer);
             List<Player> temp = [..Players];
             temp.Remove(currentPlayer);
@@ -189,7 +191,8 @@ public class Game
                     Out.Reverse();
                     List<Player> results = [..Bench, ..Out];
                     EndGame(results);
-                } else
+                }
+                else
                 {
                     StartGame(Round);
                 }
@@ -251,7 +254,8 @@ public class Game
         {
             if (Attacks == 0)
             {
-                isValidMove = true; // TODO: Investigate as to why this is needed (might need a `faceUp.Effect is AttackEffect`)
+                isValidMove =
+                    true; // TODO: Investigate as to why this is needed (might need a `faceUp.Effect is AttackEffect`)
             }
             else
             {
@@ -270,6 +274,19 @@ public class Game
         await ApplySpecialCard(playerChoice.Rank);
         NotifyFaceUp();
         return true;
+    }
+
+    /// <summary>
+    /// Penalizes a player by forcing them to draw two additional cards from the deck
+    /// </summary>
+    /// <param name="playerId">The unique identifier of the player to be penalized</param>
+    public void PenalisePlayer(string playerId)
+    {
+        Player? player = Players.FirstOrDefault(p => p.PlayerId == playerId);
+        if (player == null) return;
+        player.PickCards(Deck, 2);
+        player.HasCalledOutThisTurn = true;
+        NotifyPlayerTurn();
     }
 
     public void AddPlayer(Player player)

@@ -189,6 +189,16 @@ public class GameService
         }
     }
 
+    public void PenalisePlayer(string playerId)
+    {
+        _game.PenalisePlayer(playerId);
+    }
+
+    public void CallOut(string playerName, int count)
+    {
+        _hubContext.Clients.All.SendAsync(Const.CallOut, playerName, count);
+    }
+
     public Card? GetFaceUp() => _game.GetFaceUp();
     public int GetAttacks() => _game.Attacks;
     public string? GetRequiredSuit() => _game.RequiredSuit;

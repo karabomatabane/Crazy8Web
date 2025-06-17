@@ -103,7 +103,13 @@ public partial class Game : ComponentBase
             }
         });
         
-        _hubConnection.On(Const.RematchStarted, () =>
+       
+        
+        _hubConnection.On<string, int>(Const.CallOut, (playerName, count) =>
+        {
+            Toaster.Add($"{playerName} has {count} cards!", MatToastType.Info, "Call Out");
+            StateHasChanged();
+        });_hubConnection.On(Const.RematchStarted, () =>
         {
             NavigationManager.NavigateTo("/board", true);
         });
@@ -258,11 +264,15 @@ public partial class Game : ComponentBase
     private void PenaliseForCardNumber(string playerId)
     {
         // TODO: Use _callOuts to decide if player must be penalised.
+        if (_players.First(p => p.PlayerId == playerId).HasCalledOutThisTurn) return;
+        GameService.PenalisePlayer(playerId);
     }
 
     private void AnnounceCardCount()
     {
         UpdateHasCalledOut(true);
+        if (Owner == null) return;
+        GameService.CallOut(Owner.Name, _myCards?.Length ?? 0);
     }
 
     private void Rematch()
@@ -272,7 +282,6 @@ public partial class Game : ComponentBase
             GameService.Rematch();
         }
         _clickedRematch = true;
-        Console.WriteLine($"Rematch count: {_rematchCount} - {_clickedRematch}");
     }
 
     private void LeaveGame()
