@@ -2,7 +2,7 @@ using Crazy8.Contracts;
 using Crazy8.Models;
 using Moq;
 
-namespace Tests;
+namespace Crazy8Web.Tests;
 
 public class SpecialCardTest
 {
@@ -12,7 +12,7 @@ public class SpecialCardTest
         // Arrange
         Player player1 = new Player("Tshiamo");
         Player player2 = new Player("Karabo");
-        Player[] players = new[] { player1, player2 };
+        Player[] players = [player1, player2];
         Dictionary<string, IEffect?> specialCards = new Dictionary<string, IEffect?>
         {
             { "7", new JumpEffect() },
@@ -34,7 +34,7 @@ public class SpecialCardTest
         game.StartGame();
 
         Card card = new Card { Rank = "Ace", Suit = "Spades", Image = "" };
-        player1.Hand = new[] { card };
+        player1.Hand = [card];
 
         // Act
         await game.ProgressGame(card);

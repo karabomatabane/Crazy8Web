@@ -22,7 +22,7 @@ public class Player(string name)
     public void PickCards(Deck deck, int numCards)
     {
         Card[]? playerHand = Hand;
-        playerHand ??= Array.Empty<Card>(); //if hand is null, initialise as empty array.
+        playerHand ??= []; //if hand is null, initialise as empty array.
         int n = playerHand.Length;
         Array.Resize(ref playerHand, n + numCards);
         Hand = playerHand;

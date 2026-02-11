@@ -99,19 +99,19 @@ public class Game
     /// </summary>
     private bool _pivot;
 
-    private readonly int _deckSize = 54;
+    private const int DeckSize = 54;
 
     public Game(Player owner, Dictionary<string, IEffect?> specialCards)
     {
         GameId = Guid.NewGuid().ToString();
-        Players = new[] { owner };
+        Players = [owner];
         Owner = owner.PlayerId;
         SpecialCards = specialCards;
         Round = 0;
         TotalRounds = Players.Length - 1;
-        Bench = new List<Player>();
-        Out = new List<Player>();
-        Deck = new Deck(_deckSize);
+        Bench = [];
+        Out = [];
+        Deck = new Deck(DeckSize);
     }
 
     public Game(Player[] players, Dictionary<string, IEffect?> specialCards)
@@ -124,7 +124,7 @@ public class Game
         TotalRounds = Players.Length - 1;
         Bench = [];
         Out = [];
-        Deck = new Deck(_deckSize);
+        Deck = new Deck(DeckSize);
     }
 
     public void StartGame(int round = 1)
@@ -137,13 +137,13 @@ public class Game
             Bench = [];
         }
 
-        if (Deck.GetCount() != _deckSize)
+        if (Deck.GetCount() != DeckSize)
         {
-            Deck = new Deck(_deckSize);
+            Deck = new Deck(DeckSize);
         }
 
         Deck.Shuffle();
-        DealCards(["8", "Jack", "Ace", "7", "Joker"]);
+        DealCards(5);
         while (true)
         {
             Deck.TurnCard();

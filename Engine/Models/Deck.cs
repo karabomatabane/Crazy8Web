@@ -12,8 +12,8 @@ public sealed class Deck
 
     public Deck(int size = 52)
     {
-        FaceDown = new List<Card>();
-        FaceUp = new List<Card>();
+        FaceDown = [];
+        FaceUp = [];
         _size = size;
         foreach (string suit in Const.Suits)
         {
