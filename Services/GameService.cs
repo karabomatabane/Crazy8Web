@@ -3,82 +3,93 @@ using Crazy8.Models;
 using Crazy8Web.Constants;
 using Crazy8Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using System.Collections.Concurrent;
+using static System.Collections.Specialized.BitVector32;
+using Game = Crazy8.Models.Game;
 
 namespace Crazy8Web.Services;
 
-public class GameService
+public class GameService(IHubContext<GameHub> hubContext)
 {
-    private readonly IHubContext<GameHub> _hubContext;
-    private Game _game = null!;
-    private readonly List<string> _readyPlayers;
-    private TaskCompletionSource<string>? _suitSelectionCompletionSource;
+    private static int _suitPromptSubscribed;
+    private readonly IHubContext<GameHub> _hubContext = hubContext;
+    private readonly ConcurrentDictionary<string, GameSession> _sessions = new();
 
-    public GameService(IHubContext<GameHub> hubContext)
-    {
-        _hubContext = hubContext;
-        _readyPlayers = new List<string>();
-    }
-
-    private async void OnFaceUpCardChanged(Card card)
+    private async void OnFaceUpCardChanged(GameEvent<Card> gameEvent)
     {
         // Notify clients about the face-up card
-        await _hubContext.Clients.All.SendAsync(Const.FaceUp, card);
+        await _hubContext.Clients.Group(gameEvent.GameId).SendAsync(Const.FaceUp, gameEvent.Value);
     }
 
-    private async void OnPlayerTurnChanged(string playerId)
+    private async void OnPlayerTurnChanged(GameEvent<string> gameEvent)
     {
         // Notify clients about the player's turn
-        await _hubContext.Clients.All.SendAsync(Const.PlayerTurn, playerId);
+        await _hubContext.Clients.Group(gameEvent.GameId).SendAsync(Const.PlayerTurn, gameEvent.Value);
     }
-    
-    private void InitializeGame(Player owner, IEnumerable<Player>? additionalPlayers = null)
+
+    /// <summary>
+    /// Creates a new game session with the specified owner and optional game identifier.
+    /// </summary>
+    /// <param name="owner">The player who will be set as the owner of the new game session. Cannot be null.</param>
+    /// <param name="gameId">The unique identifier for the game session, or null to generate a new identifier.</param>
+    /// <returns>A new instance of GameSession initialized with the specified owner and game identifier.</returns>
+    private static GameSession CreateSession(Player owner, string? gameId = null, IEnumerable<Player>? additionalPlayers = null)
     {
-        Dictionary<string, IEffect?> specialCards = new()
-        {
-            { "7", new JumpEffect() }, { "8", new CallEffect() }, { "Jack", new ReverseEffect() },
-            { "2", new AttackEffect() { Magnitude = 1, Immune = false } },
-            { "Joker", new AttackEffect() { Magnitude = 2, Immune = true } }
-        };
-
-        _game = new Game(owner, specialCards);
-
+        Game game = new(owner, BuildSpecialCards(), gameId);
         if (additionalPlayers != null)
         {
             foreach (Player player in additionalPlayers)
             {
-                _game.AddPlayer(player);
+                game.AddPlayer(player);
             }
         }
-
-        _game.FaceUpCardChanged += OnFaceUpCardChanged;
-        _game.PlayerTurnChanged += OnPlayerTurnChanged;
-        _game.GameHasEnded += GameOnGameHasEnded;
-        CallEffect.SuitPrompted += OnSuitPrompted;
+        return new GameSession { Game = game };
     }
 
+    private GameSession GetSession(string gameId) =>
+    _sessions.TryGetValue(gameId, out GameSession? session)
+        ? session
+        : throw new InvalidOperationException($"Game '{gameId}' not found.");
 
-    public void CreateGame(Player owner)
+
+    public string CreateGame(Player owner)
     {
-        Dictionary<string, IEffect?> specialCards = new()
+        GameSession session = CreateSession(owner);
+        WireEvents(session);
+        _sessions[session.Game.GameId] = session;
+
+        if (Interlocked.Exchange(ref _suitPromptSubscribed, 1) == 0)
+        {
+            CallEffect.SuitPrompted += OnSuitPrompted;
+        }
+
+        return session.Game.GameId;
+    }
+
+    private static Dictionary<string, IEffect?> BuildSpecialCards()
+    {
+        return new()
         {
             { "7", new JumpEffect() }, { "8", new CallEffect() }, { "Jack", new ReverseEffect() },
             { "2", new AttackEffect() { Magnitude = 1, Immune = false } },
             { "Joker", new AttackEffect() { Magnitude = 2, Immune = true } }
         };
-
-        _game = new Game(owner, specialCards);
-
-        // Subscribe to game events
-        _game.FaceUpCardChanged += OnFaceUpCardChanged;
-        _game.PlayerTurnChanged += OnPlayerTurnChanged;
-        _game.GameHasEnded += GameOnGameHasEnded;
-
-        CallEffect.SuitPrompted += OnSuitPrompted;
     }
 
-    private void GameOnGameHasEnded(List<Player> results)
+    private void WireEvents(GameSession session)
     {
-        _hubContext.Clients.All.SendAsync(Const.EndGame, results);
+        string gameId = session.Game.GameId;
+
+        session.Game.FaceUpCardChanged += OnFaceUpCardChanged;
+
+        session.Game.PlayerTurnChanged += OnPlayerTurnChanged;
+
+        session.Game.GameHasEnded += GameOnGameHasEnded;
+    }
+
+    private void GameOnGameHasEnded(string gameId, List<Player> results)
+    {
+        _hubContext.Clients.Group(gameId).SendAsync(Const.EndGame, results);
     }
 
     private void DeckOnVibeCheckEvent(object? sender, Deck.VibeCheckEventArgs e)
@@ -86,86 +97,111 @@ public class GameService
         Console.WriteLine("Something went wrong!");
     }
 
-    private Task<string> OnSuitPrompted(string defaultSuit)
+    private Task<string> OnSuitPrompted(GameEvent<string> gameEvent)
     {
-        _suitSelectionCompletionSource = new TaskCompletionSource<string>();
-        _hubContext.Clients.All.SendAsync(Const.PromptSuit, defaultSuit);
+        GameSession session = GetSession(gameEvent.GameId);
+        session.SuitSelectionTcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _hubContext.Clients.Group(gameEvent.GameId).SendAsync(Const.PromptSuit, gameEvent.Value);
         // wait for user to select suit
-        return _suitSelectionCompletionSource.Task;
+        return session.SuitSelectionTcs.Task;
     }
 
-    public void ReceiveSuitSelection(string selectedSuit)
+    public void ReceiveSuitSelection(string gameId, string selectedSuit)
     {
-        if (_suitSelectionCompletionSource == null) return;
-        _suitSelectionCompletionSource.SetResult(selectedSuit);
-        _suitSelectionCompletionSource = null;
+        GameSession session = GetSession(gameId);
+        if (session.SuitSelectionTcs is null) return;
+        session.SuitSelectionTcs.TrySetResult(selectedSuit);
+        session.SuitSelectionTcs = null;
     }
 
-    public bool IsGameRunning() => _game.IsRunning;
+    public bool IsGameRunning(string gameId) => _sessions[gameId].Game.IsRunning;
 
-    public string GetGameId() => _game.GameId;
+    //public string GetGameId() => _game.GameId;
 
-    public void StartGame()
+    public void StartGame(string gameId)
     {
-        _game.StartGame();
+        _sessions[gameId].Game.StartGame();
     }
 
-    public void Rematch()
+    public void Rematch(string gameId)
     {
-        _hubContext.Clients.All.SendAsync(Const.RematchClicked);
+        _hubContext.Clients.Group(gameId).SendAsync(Const.RematchClicked);
     }
 
-    public void RestartGame(List<Player> players)
+    public void RestartGame(string gameId, List<Player> players)
     {
-        if (players == null || players.Count == 0)
+        if (players is null || players.Count == 0)
             throw new InvalidOperationException("No players for rematch.");
 
         Player owner = players[0];
         IEnumerable<Player> additionalPlayers = players.Skip(1);
-        InitializeGame(owner, additionalPlayers);
 
-        _hubContext.Clients.All.SendAsync(Const.RematchStarted);
+        GameSession replacement = CreateSession(owner, gameId, additionalPlayers);
+        WireEvents(replacement);
+
+        // preserve ready list, replace only game
+        GameSession current = GetSession(gameId);
+        current.Game = replacement.Game;
+        current.ReadyPlayers.Clear();
+
+        _ = _hubContext.Clients.Group(gameId).SendAsync(Const.RematchStarted);
     }
 
     public void JoinGame(Player player, string gameId)
     {
-        if (_game == null || gameId != _game.GameId)
+        if (!_sessions.TryGetValue(gameId, out GameSession? session))
         {
+            // TODO: use a toast to notify user
+            Console.WriteLine("Game does not exist. Please confirm you have a valid game ID and try again ;D");
             throw new InvalidOperationException("Game does not exist or has not been created yet.");
         }
 
-        _game.AddPlayer(player);
-        _hubContext.Clients.All.SendAsync(Const.JoinedKey, player);
+        session.Game.AddPlayer(player);
+        _hubContext.Clients.Group(gameId).SendAsync(Const.JoinedKey, player);
     }
 
-    public Player[] GetPlayers()
+    public Player[] GetPlayers(string gameId)
     {
-        return _game.GetPlayers();
+        if(_sessions.TryGetValue(gameId, out GameSession? session))
+        {
+            return session.Game.GetPlayers();
+        }
+        throw new InvalidOperationException("The game ID you entered has no associated game.");
     }
 
-    public List<Player> GetOtherPlayers(Player player)
+    public List<Player> GetOtherPlayers(string gameId, Player player)
     {
-        List<Player> players = _game.GetPlayers().Where(p => p.PlayerId != player.PlayerId).ToList();
-        return players;
+        if (_sessions.TryGetValue(gameId, out GameSession? session))
+        {
+            List<Player> players = session.Game.GetPlayers().Where(p => p.PlayerId != player.PlayerId).ToList();
+            return players;
+        }
+        throw new InvalidOperationException("The game ID you entered has no associated game.");
     }
 
-    public List<string> GetReadyPlayers() => _readyPlayers;
+    public List<string> GetReadyPlayers(string gameId) => _sessions[gameId].ReadyPlayers;
 
-    public void PlayerReady(string playerId)
+    public void PlayerReady(string gameId, string playerId)
     {
-        _readyPlayers.Add(playerId);
-        _hubContext.Clients.All.SendAsync(Const.PlayerReady, playerId);
+        GameSession session = GetSession(gameId);
+        if (!session.ReadyPlayers.Contains(playerId))
+        {
+            session.ReadyPlayers.Add(playerId);
+        }
+        _hubContext.Clients.Group(gameId).SendAsync(Const.PlayerReady, playerId);
     }
 
-    public void StartSession()
+    public void StartSession(string gameId)
     {
-        _hubContext.Clients.All.SendAsync(Const.StartSession);
-        _game.Deck.VibeCheckEvent += DeckOnVibeCheckEvent;
+        GameSession session = GetSession(gameId);
+        _hubContext.Clients.Group(gameId).SendAsync(Const.StartSession);
+        session.Game.Deck.VibeCheckEvent += DeckOnVibeCheckEvent;
     }
 
-    public Card[] GetPlayerCards(string playerId)
+    public Card[] GetPlayerCards(string gameId, string playerId)
     {
-        Player[] players = _game.GetPlayers();
+        GameSession session = GetSession(gameId);
+        Player[] players = session.Game.GetPlayers();
         Player? player = players.FirstOrDefault(p => p.PlayerId == playerId);
         if (player != null)
         {
@@ -175,32 +211,42 @@ public class GameService
         return [];
     }
 
-    public string GetOwnerId() => _game.Owner;
+    public string GetOwnerId(string gameId) => _sessions[gameId].Game.Owner;
 
-    public bool IsMine(string playerId) => _game.Owner == playerId;
+    public bool IsMine(string gameId, string playerId) => _sessions[gameId].Game.Owner == playerId;
 
-    public async Task ProgressGame(Card? playerChoice)
+    public async Task ProgressGame(string gameId, Card? playerChoice)
     {
-        await _game.ProgressGame(playerChoice);
-        bool isFine = _game.Deck.VibeCheck(_game.Players, "progress game");
+        GameSession session = GetSession(gameId);
+        var game = session.Game;
+        await game.ProgressGame(playerChoice);
+        bool isFine = game.Deck.VibeCheck(game.Players, "progress game");
         if (!isFine)
         {
             Console.WriteLine("Something went wrong playing card");
         }
     }
 
-    public void PenalisePlayer(string playerId)
+    public void PenalisePlayer(string gameId, string playerId)
     {
-        _game.PenalisePlayer(playerId);
+        GameSession session = GetSession(gameId);
+        session.Game.PenalisePlayer(playerId);
     }
 
-    public void CallOut(string playerName, int count)
+    public void CallOut(string gameId, string playerName, int count)
     {
-        _hubContext.Clients.All.SendAsync(Const.CallOut, playerName, count);
+        _hubContext.Clients.Group(gameId).SendAsync(Const.CallOut, playerName, count);
     }
 
-    public Card? GetFaceUp() => _game.GetFaceUp();
-    public int GetAttacks() => _game.Attacks;
-    public string? GetRequiredSuit() => _game.RequiredSuit;
-    public int GetTurn() => _game.Turn;
+    public Card? GetFaceUp(string gameId) => _sessions[gameId].Game.GetFaceUp();
+    public int GetAttacks(string gameId) => _sessions[gameId].Game.Attacks;
+    public string? GetRequiredSuit(string gameId) => _sessions[gameId].Game.RequiredSuit;
+    public int GetTurn(string gameId) => _sessions[gameId].Game.Turn;
+}
+
+internal class GameSession
+{
+    public Game Game { get; set; } = null!;
+    public List<string> ReadyPlayers { get; set; } = [];
+    public TaskCompletionSource<string>? SuitSelectionTcs { get; set; } = null!;
 }

@@ -45,7 +45,7 @@ public partial class JoinPage : ComponentBase
     {
         if (Owner == null || string.IsNullOrEmpty(_joiningId)) return;
         GameService.JoinGame(Owner, _joiningId);
-        NavigationManager.NavigateTo($"lobby/{GameService.GetGameId()}");
+        NavigationManager.NavigateTo($"lobby/{_joiningId}");
     }
 
     private void HandleKeyUp(KeyboardEventArgs e)

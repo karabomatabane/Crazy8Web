@@ -5,12 +5,10 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Crazy8Web.Hubs;
 
-public class GameHub : Hub
+public class GameHub(GameService gameService) : Hub
 {
-    private readonly GameService _gameService;
+    private readonly GameService _gameService = gameService;
 
-    public GameHub(GameService gameService)
-    {
-        _gameService = gameService;
-    }
+    public Task JoinGameGroup(string gameId) => Groups.AddToGroupAsync(Context.ConnectionId, gameId);
+    public Task LeaveGameGroup(string gameId) => Groups.RemoveFromGroupAsync(Context.ConnectionId, gameId);
 }

@@ -42,7 +42,7 @@ public partial class StartPage : ComponentBase
         {
             ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(OwnerKey);
             Owner = result.Value;
-            if (Owner != null)
+            if (Owner is not null)
             {
                 _isPlayerSetup = false;
                 StateHasChanged(); // Force re-render to update UI
@@ -57,22 +57,21 @@ public partial class StartPage : ComponentBase
     private void PrepareToJoin()
     {
         // TODO: Use game id to add player to a game
-        if (Owner == null) return;
+        if (Owner is null) return;
         NavigationManager.NavigateTo($"/join/{Owner.PlayerId}");
     }
 
 
     private void CreateGame()
     {
-        if (Owner == null) return;
-        GameService.CreateGame(Owner);
-        NavigationManager.NavigateTo($"lobby/{GameService.GetGameId()}");
+        if (Owner is null) return;
+        NavigationManager.NavigateTo($"lobby/{GameService.CreateGame(Owner)}");
     }
 
     private async Task CreatePlayer()
     {
         if (string.IsNullOrEmpty(_inputName)) return;
-        if (Owner == null)
+        if (Owner is null)
         {
             Owner = new Player(_inputName);
         }
@@ -95,7 +94,7 @@ public partial class StartPage : ComponentBase
 
     private void EditName()
     {
-        if (Owner != null) _inputName = Owner.Name;
+        if (Owner is not null) _inputName = Owner.Name;
         _isPlayerSetup = true;
         StateHasChanged();
     }

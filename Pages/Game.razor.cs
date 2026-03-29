@@ -11,6 +11,7 @@ namespace Crazy8Web.Pages;
 
 public partial class Game : ComponentBase
 {
+    public string? GameId { get; set; }
     [Inject] private GameService GameService { get; set; }
     [Inject] private IJSRuntime JSRuntime { get; set; }
     [Inject] private NavigationManager NavigationManager { get; set; }
@@ -22,7 +23,7 @@ public partial class Game : ComponentBase
     private Player? _turn;
     private Card? _faceUp;
     private List<Player> _players = [];
-    private Card[] _myCards = Array.Empty<Card>();
+    private Card[] _myCards = [];
     private int _choice = 0;
     private bool _dialogIsOpen = false;
     private string? _suit = null;
@@ -43,12 +44,13 @@ public partial class Game : ComponentBase
             .Build();
         _hubConnection.On<Card>(Const.FaceUp, async (card) =>
         {
+            if (GameId == null) return;
             // Update UI with face-up card
             await InvokeAsync((() =>
             {
-                _players = GameService.GetPlayers().ToList();
+                _players = [.. GameService.GetPlayers(GameId)];
                 _faceUp = card;
-                _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
+                _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit(GameId));
                 Console.WriteLine("New FaceUp!!");
                 StateHasChanged();
             }));
@@ -56,16 +58,17 @@ public partial class Game : ComponentBase
 
         _hubConnection.On<string>(Const.PlayerTurn, async (playerId) =>
         {
+            if (GameId == null) return;
             // Update UI with current player's turn
             await InvokeAsync((() =>
             {
-                _players = GameService.GetPlayers().ToList();
+                _players = [.. GameService.GetPlayers(GameId)];
                 _turn = _players?.FirstOrDefault(p => p.PlayerId == playerId);
                 if (Owner != null)
-                    _myCards = GameService.GetPlayerCards(Owner.PlayerId);
+                    _myCards = GameService.GetPlayerCards(GameId, Owner.PlayerId);
                 _choice = 0;
                 _tempChoice = null;
-                _attacks = GameService.GetAttacks();
+                _attacks = GameService.GetAttacks(GameId);
                 _dialogIsOpen = false;
                 StateHasChanged();
             }));
@@ -97,9 +100,9 @@ public partial class Game : ComponentBase
         _hubConnection.On(Const.RematchClicked, () =>
         {
             _rematchCount++;
-            if (_rematchCount == _players.Count && Owner != null && GameService.IsMine(Owner.PlayerId))
+            if (_rematchCount == _players.Count && Owner != null && GameId != null && GameService.IsMine(GameId, Owner.PlayerId))
             {
-                GameService.RestartGame(_players);
+                GameService.RestartGame(GameId, _players);
             }
         });
         
@@ -109,34 +112,38 @@ public partial class Game : ComponentBase
         {
             Toaster.Add($"{playerName} has {count} cards!", MatToastType.Info, "Call Out");
             StateHasChanged();
-        });_hubConnection.On(Const.RematchStarted, () =>
+        });
+
+        _hubConnection.On(Const.RematchStarted, () =>
         {
-            NavigationManager.NavigateTo("/board", true);
+            NavigationManager.NavigateTo($"/board/{GameId}", true);
         });
 
         await _hubConnection.StartAsync();
         await LoadOwnerFromSessionAsync();
 
-        _players = GameService.GetPlayers().ToList();
-        if (Owner == null)
+        if (Owner == null || GameId == null)
         {
             _myCards = [];
             return;
         }
 
-        if (!GameService.IsGameRunning() && GameService.IsMine(Owner.PlayerId))
+        _players = [.. GameService.GetPlayers(GameId)];
+        
+
+        if (!GameService.IsGameRunning(GameId) && GameService.IsMine(GameId, Owner.PlayerId))
         {
-            GameService.StartGame();
+            GameService.StartGame(GameId);
         }
 
-        _myCards = GameService.GetPlayerCards(Owner.PlayerId);
-        if (GameService.IsGameRunning())
+        _myCards = GameService.GetPlayerCards(GameId, Owner.PlayerId);
+        if (GameService.IsGameRunning(GameId))
         {
-            _faceUp = GameService.GetFaceUp();
+            _faceUp = GameService.GetFaceUp(GameId);
         }
 
-        _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
-        _turn = _players[GameService.GetTurn()];
+        _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit(GameId));
+        _turn = _players[GameService.GetTurn(GameId)];
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -174,9 +181,9 @@ public partial class Game : ComponentBase
     {
         _suit = _dialogSuit;
         _dialogIsOpen = false;
-        if (_suit == null) return;
-        GameService.ReceiveSuitSelection(_suit);
-        _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit());
+        if (_suit == null || GameId == null) return;
+        GameService.ReceiveSuitSelection(GameId, _suit);
+        _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit(GameId));
     }
 
     private string GetPlayerName(Player player)
@@ -227,12 +234,18 @@ public partial class Game : ComponentBase
     private async void PlayChoice()
     {
         UpdateHasCalledOut(false);
-        await GameService.ProgressGame(_myCards[_choice]);
+        if (GameId != null)
+        {
+            await GameService.ProgressGame(GameId, _myCards[_choice]); 
+        }
     }
 
     private async void Pick()
     {
-        await GameService.ProgressGame(null);
+        if (GameId != null)
+        {
+            await GameService.ProgressGame(GameId, null); 
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -264,29 +277,30 @@ public partial class Game : ComponentBase
     private void PenaliseForCardNumber(string playerId)
     {
         // TODO: Use _callOuts to decide if player must be penalised.
-        if (_players.First(p => p.PlayerId == playerId).HasCalledOutThisTurn) return;
-        GameService.PenalisePlayer(playerId);
+        if (_players.First(p => p.PlayerId == playerId).HasCalledOutThisTurn || GameId == null) return;
+        GameService.PenalisePlayer(GameId, playerId);
     }
 
     private void AnnounceCardCount()
     {
         UpdateHasCalledOut(true);
-        if (Owner == null) return;
-        GameService.CallOut(Owner.Name, _myCards?.Length ?? 0);
+        if (Owner == null || GameId == null) return;
+        GameService.CallOut(GameId, Owner.Name, _myCards?.Length ?? 0);
     }
 
     private void Rematch()
     {
-        if (!_clickedRematch)
+        if (!_clickedRematch && GameId != null)
         {
-            GameService.Rematch();
+            GameService.Rematch(GameId);
         }
         _clickedRematch = true;
     }
 
     private void LeaveGame()
     {
-        if (Owner == null) return;
+        if (Owner == null || GameId == null) return;
+        _hubConnection.InvokeAsync(Const.LeaveGameGroup, GameId);
         _players.RemoveAll(p => p.PlayerId == Owner.PlayerId);
         // Navigate to the home page
         NavigationManager.NavigateTo("/");

@@ -34,13 +34,16 @@ public partial class LobbyPage : ComponentBase
         {
             await InvokeAsync(() =>
             {
-                if (Owner == null)
+                if (Owner is null)
                 {
                     throw new Exception("We can't retrieve user information. Please start again.");
                 }
 
-                _players = GameService.GetOtherPlayers(Owner);
-                _isMine = GameService.IsMine(Owner.PlayerId);
+                if (GameId is not null)
+                {
+                    _players = GameService.GetOtherPlayers(GameId, Owner);
+                    _isMine = GameService.IsMine(GameId, Owner.PlayerId);
+                }
                 StateHasChanged();
             });
         });
@@ -48,8 +51,11 @@ public partial class LobbyPage : ComponentBase
         {
             await InvokeAsync(() =>
             {
-                readyPlayers = GameService.GetReadyPlayers();
-                StateHasChanged();
+                if (GameId is not null)
+                {
+                    readyPlayers = GameService.GetReadyPlayers(GameId);
+                    StateHasChanged(); 
+                }
             });
         });
         _hubConnection.On(Const.StartSession, () =>
@@ -57,14 +63,18 @@ public partial class LobbyPage : ComponentBase
             NavigationManager.NavigateTo("/board");
         });
         await _hubConnection.StartAsync();
+        await _hubConnection.InvokeAsync(Const.JoinGameGroup, GameId);
         await LoadOwnerFromSessionAsync();
-        if (Owner == null)
+        if (Owner is null)
         {
             throw new Exception("We can't retrieve user information. Please start again.");
         }
-        _players = GameService.GetOtherPlayers(Owner);
-        _isMine = GameService.IsMine(Owner.PlayerId);
-        readyPlayers = GameService.GetReadyPlayers();
+        if (GameId is not null)
+        {
+            _players = GameService.GetOtherPlayers(GameId, Owner);
+            _isMine = GameService.IsMine(GameId, Owner.PlayerId);
+            readyPlayers = GameService.GetReadyPlayers(GameId);
+        }
     }
     
     private async Task LoadOwnerFromSessionAsync()
@@ -73,7 +83,7 @@ public partial class LobbyPage : ComponentBase
         {
             ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(Const.OwnerKey);
             Owner = result.Value;
-            if (Owner != null)
+            if (Owner is not null)
             {
                 StateHasChanged(); // Force re-render to update UI
             }
@@ -86,15 +96,15 @@ public partial class LobbyPage : ComponentBase
 
     private void Start()
     {
-        if (Owner == null)
+        if (Owner is null || GameId is null)
             return;
         if (_isMine)
         {
-            GameService.StartSession();
+            GameService.StartSession(GameId);
         }
         else
         {
-            GameService.PlayerReady(Owner.PlayerId);
+            GameService.PlayerReady(GameId, Owner.PlayerId);
         }
     }
 
@@ -105,7 +115,7 @@ public partial class LobbyPage : ComponentBase
         Toaster.Add("Code copied to clipboard!", MatToastType.Success);
     }
 
-    private bool IsOwner(string playerId) => GameService.GetOwnerId() == playerId;
+    private bool IsOwner(string playerId) => GameId is not null && GameService.GetOwnerId(GameId) == playerId;
     
     public async ValueTask DisposeAsync()
     {

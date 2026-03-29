@@ -26,7 +26,7 @@ public class SpecialCardTest
         mockDeck.Setup(d => d.DealCards(2)).Returns(new Card[2]);
         mockDeck.Setup(d => d.TurnCard());
 
-        Game game = new Game(players, specialCards)
+        Game game = new(players, specialCards)
         {
             Deck = mockDeck.Object
         };

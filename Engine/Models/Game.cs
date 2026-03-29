@@ -7,17 +7,17 @@ public class Game
     /// <summary>
     /// Event triggered when the face-up card changes
     /// </summary>
-    public event Action<Card>? FaceUpCardChanged;
+    public event Action<GameEvent<Card>>? FaceUpCardChanged;
 
     /// <summary>
     /// Event triggered when the current player's turn changes
     /// </summary>
-    public event Action<string>? PlayerTurnChanged;
+    public event Action<GameEvent<string>>? PlayerTurnChanged;
 
     /// <summary>
     /// Event triggered when the game ends
     /// </summary>
-    public event Action<List<Player>>? GameHasEnded;
+    public event Action<string, List<Player>>? GameHasEnded;
 
     /// <summary>
     /// Unique identifier for the game session
@@ -101,9 +101,9 @@ public class Game
 
     private const int DeckSize = 54;
 
-    public Game(Player owner, Dictionary<string, IEffect?> specialCards)
+    public Game(Player owner, Dictionary<string, IEffect?> specialCards, string? gameId)
     {
-        GameId = Guid.NewGuid().ToString();
+        GameId = gameId ?? Guid.NewGuid().ToString();
         Players = [owner];
         Owner = owner.PlayerId;
         SpecialCards = specialCards;
@@ -114,9 +114,9 @@ public class Game
         Deck = new Deck(DeckSize);
     }
 
-    public Game(Player[] players, Dictionary<string, IEffect?> specialCards)
+    public Game(Player[] players, Dictionary<string, IEffect?> specialCards, string? gameId = null)
     {
-        GameId = Guid.NewGuid().ToString();
+        GameId = gameId ?? Guid.NewGuid().ToString();
         Players = players;
         Owner = players[0].PlayerId;
         SpecialCards = specialCards;
@@ -133,7 +133,7 @@ public class Game
         if (Players.Length < 2) return;
         if (round > 1)
         {
-            Players = Bench.ToArray();
+            Players = [.. Bench];
             Bench = [];
         }
 
@@ -181,7 +181,7 @@ public class Game
             Bench.Add(currentPlayer);
             List<Player> temp = [..Players];
             temp.Remove(currentPlayer);
-            Players = temp.ToArray();
+            Players = [.. temp];
             if (Players.Length == 1)
             {
                 Out.Add(Players[0]);
@@ -325,7 +325,7 @@ public class Game
     private void EndGame(List<Player> results)
     {
         IsRunning = false;
-        GameHasEnded?.Invoke(results);
+        GameHasEnded?.Invoke(GameId, results);
         // Console.WriteLine($"THE GAME HAS ENDED!\nWINNER: {Players[0]}");
         // for (int i = 0; i < Out.Count; i++)
         // {
@@ -390,11 +390,11 @@ public class Game
     private void NotifyPlayerTurn()
     {
         string currentPlayerId = Players[Turn].PlayerId;
-        PlayerTurnChanged?.Invoke(currentPlayerId);
+        PlayerTurnChanged?.Invoke(new GameEvent<string>(GameId, currentPlayerId));
     }
 
     private void NotifyFaceUp(Card? card = null)
     {
-        FaceUpCardChanged?.Invoke(card ?? GetFaceUp() ?? new Card() { Rank = "Unknown", Suit = "Unknown" });
+        FaceUpCardChanged?.Invoke(new GameEvent<Card>(GameId, card ?? GetFaceUp() ?? new Card() { Rank = "Unknown", Suit = "Unknown" }));
     }
 }

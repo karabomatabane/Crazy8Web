@@ -7,6 +7,8 @@ public static class Const
     public static readonly string FaceUp = "FaceUp";
     public static readonly string JoinedKey = "PlayerJoined";
     public static readonly string PlayerReady = "PlayerReady";
+    public static readonly string JoinGameGroup = "JoinGameGroup";
+    public static readonly string LeaveGameGroup = "LeaveGameGroup";
     public static readonly string PlayerTurn = "PlayerTurn";
     public static readonly string ReceiveSuit = "ReceiveSuitSelection";
     public static readonly string PromptSuit = "PromptSuit";

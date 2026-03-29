@@ -38,19 +38,25 @@ public class AttackEffect : IEffect
     }
 }
 
+public readonly struct GameEvent<T>(string gameId, T value)
+{
+    public string GameId { get; } = gameId;
+    public T Value { get; } = value;
+}
+
 public class CallEffect : IEffect
 {
     public EffectFrequency Frequency => EffectFrequency.SingleTurn;
     public EffectType Type { get; } = EffectType.Transformation;
     public bool Immune => true;
     // Define an event to prompt the player for a suit
-    public static event Func<string, Task<string>>? SuitPrompted;
+    public static event Func<GameEvent<string>, Task<string>>? SuitPrompted;
 
     public async Task Execute(Game game)
     {
         if (SuitPrompted != null)
         {
-            game.RequiredSuit = await SuitPrompted.Invoke(game.GetFaceUp()!.Suit);
+            game.RequiredSuit = await SuitPrompted.Invoke(new GameEvent<string>(game.GameId, game.GetFaceUp()!.Suit));
         }
     }
 

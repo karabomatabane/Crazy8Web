@@ -1,4 +1,5 @@
-﻿@page "/board"
+﻿@page "/board/{gameId}"
+@using BlazorBootstrap
 @using Crazy8.Constants
 @using Crazy8Web.Utils
 <div class="container">
@@ -44,9 +45,9 @@
                 <img src="assets/cards/back.png"
                      class="card-image"
                      alt="Card back">
-                @if (_requireSuit)
+                @if (_requireSuit && GameId != null)
                 {
-                    <img src="@Utility.GetCardImage(GameService.GetRequiredSuit()!.ToLower())"
+                    <img src="@Utility.GetCardImage(GameService.GetRequiredSuit(GameId)!.ToLower())"
                          class="card-image active-card"
                          alt="Required suit">
                 }
@@ -66,7 +67,7 @@
                 <div class="card">
                     @for (int i = 0; i < _myCards.Length; i++)
                     {
-                        Card card = _myCards[i];
+                        Crazy8.Models.Card card = _myCards[i];
                         bool isSelected = _tempChoice == i;
                         int pos = i;
                         <img src="@card.Image" @onclick="() => SelectCard(pos)"
@@ -77,7 +78,7 @@
         </div>
 
         <div class="button-container">
-            <Button @onclick="Pick" class="btnPi    ck action-button primary" Disabled="@(!IsMyTurn())">Draw Card</Button>
+            <Button @onclick="Pick" class="btnPick action-button primary" Disabled="@(!IsMyTurn())">Draw Card</Button>
         </div>
     }
     <CustomDialog @bind-IsOpen="@_dialogIsOpen"
