@@ -42,6 +42,7 @@ public partial class Game : ComponentBase
     {
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(NavigationManager.ToAbsoluteUri("/gameHub"))
+            .WithAutomaticReconnect()
             .Build();
         _hubConnection.On<Card>(Const.FaceUp, async (card) =>
         {

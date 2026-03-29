@@ -29,6 +29,7 @@ public partial class LobbyPage : ComponentBase
     {
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(NavigationManager.ToAbsoluteUri("/gameHub"))
+            .WithAutomaticReconnect()
             .Build();
 
         _hubConnection.On<Player>(Const.JoinedKey, async (player) =>
