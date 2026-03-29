@@ -13,14 +13,14 @@ public partial class Game : ComponentBase
 {
     [Parameter]
     public string? GameId { get; set; }
-    [Inject] private GameService GameService { get; set; }
-    [Inject] private IJSRuntime JSRuntime { get; set; }
-    [Inject] private NavigationManager NavigationManager { get; set; }
-    [Inject] private ProtectedSessionStorage SessionStore { get; set; }
-    [Inject] protected IMatToaster Toaster { get; set; }
+    [Inject] private GameService GameService { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ProtectedSessionStorage SessionStore { get; set; } = null!;
+    [Inject] protected IMatToaster Toaster { get; set; } = null!;
     private Player? Owner { get; set; }
 
-    private HubConnection _hubConnection;
+    private HubConnection? _hubConnection;
     private Player? _turn;
     private Card? _faceUp;
     private List<Player> _players = [];
@@ -46,7 +46,7 @@ public partial class Game : ComponentBase
             .Build();
         _hubConnection.On<Card>(Const.FaceUp, async (card) =>
         {
-            if (GameId == null) return;
+            if (GameId is null) return;
             // Update UI with face-up card
             await InvokeAsync((() =>
             {
@@ -60,7 +60,7 @@ public partial class Game : ComponentBase
 
         _hubConnection.On<string>(Const.PlayerTurn, async (playerId) =>
         {
-            if (GameId == null) return;
+            if (GameId is null) return;
             // Update UI with current player's turn
             await InvokeAsync((() =>
             {
@@ -128,7 +128,7 @@ public partial class Game : ComponentBase
         }
         await LoadOwnerFromSessionAsync();
 
-        if (Owner == null || GameId == null)
+        if (Owner is null || GameId is null)
         {
             _myCards = [];
             return;
@@ -187,7 +187,7 @@ public partial class Game : ComponentBase
     {
         _suit = _dialogSuit;
         _dialogIsOpen = false;
-        if (_suit == null || GameId == null) return;
+        if (_suit is null || GameId is null) return;
         GameService.ReceiveSuitSelection(GameId, _suit);
         _requireSuit = !string.IsNullOrEmpty(GameService.GetRequiredSuit(GameId));
     }
@@ -256,7 +256,10 @@ public partial class Game : ComponentBase
 
     public async ValueTask DisposeAsync()
     {
-        await _hubConnection.DisposeAsync();
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync(); 
+        }
     }
 
     private void TogglePeek()
@@ -283,14 +286,14 @@ public partial class Game : ComponentBase
     private void PenaliseForCardNumber(string playerId)
     {
         // TODO: Use _callOuts to decide if player must be penalised.
-        if (_players.First(p => p.PlayerId == playerId).HasCalledOutThisTurn || GameId == null) return;
+        if (_players.First(p => p.PlayerId == playerId).HasCalledOutThisTurn || GameId is null) return;
         GameService.PenalisePlayer(GameId, playerId);
     }
 
     private void AnnounceCardCount()
     {
         UpdateHasCalledOut(true);
-        if (Owner == null || GameId == null) return;
+        if (Owner is null || GameId is null) return;
         GameService.CallOut(GameId, Owner.Name, _myCards?.Length ?? 0);
     }
 
@@ -305,7 +308,7 @@ public partial class Game : ComponentBase
 
     private void LeaveGame()
     {
-        if (Owner == null || GameId == null) return;
+        if (Owner is null || GameId is null || _hubConnection is null) return;
         _hubConnection.InvokeAsync(Const.LeaveGameGroup, GameId);
         _players.RemoveAll(p => p.PlayerId == Owner.PlayerId);
         // Navigate to the home page
@@ -314,7 +317,7 @@ public partial class Game : ComponentBase
 
     private void UpdateHasCalledOut(bool value)
     {
-        if (Owner == null) return;
+        if (Owner is null) return;
         int index = _players.FindIndex(p => p.PlayerId == Owner.PlayerId);
         if (index < 0)
         {

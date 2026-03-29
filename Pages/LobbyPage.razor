@@ -26,7 +26,7 @@
             </div>
         }
 
-        @if (_players?.Count > 0)
+        @if (_players?.Count > 0 && _readyPlayers is not null)
         {
             <div class="players-section">
                 <h4 class="section-title">Players</h4>
@@ -36,7 +36,7 @@
                         <div class="player-row">
                             <span class="player-name">@player.Name</span>
                             <span class="player-status">
-                                @if (readyPlayers.Contains(player.PlayerId) || IsOwner(player.PlayerId))
+                                @if (_readyPlayers.Contains(player.PlayerId) || IsOwner(player.PlayerId))
                                 {
                                     <MatIcon Icon="check_circle" Class="ready-icon"></MatIcon>
                                 }
@@ -53,7 +53,7 @@
                 @if (_isMine)
                 {
                     <Button Raised="true"
-                               Disabled="@(readyPlayers.Count < _players.Count)"
+                               Disabled="@(_readyPlayers.Count < _players.Count)"
                                Class="action-button primary"
                                @onclick="Start">
                         Start Game
@@ -64,7 +64,7 @@
                     <Button 
                                Class="action-button primary"
                                @onclick="Start">
-                        @(Owner?.PlayerId != null && readyPlayers.Contains(Owner.PlayerId) ? "Waiting..." : "Ready")
+                        @(Owner?.PlayerId != null && _readyPlayers.Contains(Owner.PlayerId) ? "Waiting..." : "Ready")
                     </Button>   
                 }
             </div>

@@ -14,7 +14,7 @@ public partial class CustomDialog : ComponentBase
     [Parameter] public string? Class { get; set; }
     [Parameter] public EventCallback OnConfirm { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; } = null!;
 
     private async Task CloseDialog()
     {

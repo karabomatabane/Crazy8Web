@@ -11,11 +11,11 @@ namespace Crazy8Web.Pages;
 
 public partial class StartPage : ComponentBase
 {
-    [Inject] private GameService GameService { get; set; }
-    [Inject] private NavigationManager NavigationManager { get; set; }
+    [Inject] private GameService GameService { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
-    [Inject] private ProtectedSessionStorage SessionStore { get; set; }
-    [Inject] protected IMatToaster Toaster { get; set; }
+    [Inject] private ProtectedSessionStorage SessionStore { get; set; } = null!;
+    [Inject] protected IMatToaster Toaster { get; set; } = null!;
 
     private Player? Owner { get; set; }
     private static string? _inputName;

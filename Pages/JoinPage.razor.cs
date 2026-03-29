@@ -10,9 +10,9 @@ namespace Crazy8Web.Pages;
 public partial class JoinPage : ComponentBase
 {
     [Parameter] public required string PlayerId { get; set; }
-    [Inject] private ProtectedSessionStorage SessionStore { get; set; }
-    [Inject] private GameService GameService { get; set; }
-    [Inject] private NavigationManager NavigationManager { get; set; }
+    [Inject] private ProtectedSessionStorage SessionStore { get; set; } = null!;
+    [Inject] private GameService GameService { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
     private static string? _joiningId;
     private Player? Owner { get; set; }

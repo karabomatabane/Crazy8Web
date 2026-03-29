@@ -14,14 +14,17 @@ public partial class LobbyPage : ComponentBase
 {
     [Parameter]
     public string? GameId { get; set; }
-    private HubConnection _hubConnection;
-    [Inject] private IJSRuntime JSRuntime { get; set; }
-    [Inject] private NavigationManager NavigationManager { get; set; }
-    [Inject] private ProtectedSessionStorage SessionStore { get; set; }
-    [Inject] private GameService GameService { get; set; }
+
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ProtectedSessionStorage SessionStore { get; set; } = null!;
+    [Inject] private GameService GameService { get; set; } = null!;
+    [Inject] protected IMatToaster Toaster { get; set; } = null!;
+
+    private HubConnection? _hubConnection;
     private Player? Owner { get; set; }
-    private List<string> readyPlayers;
-    [Inject] protected IMatToaster Toaster { get; set; }
+    private List<string>? _readyPlayers;
+    
     private List<Player>? _players;
     private bool _isMine = false;
 
@@ -56,7 +59,7 @@ public partial class LobbyPage : ComponentBase
             {
                 if (GameId is not null)
                 {
-                    readyPlayers = GameService.GetReadyPlayers(GameId);
+                    _readyPlayers = GameService.GetReadyPlayers(GameId);
                     StateHasChanged();
                 }
             });
@@ -82,7 +85,7 @@ public partial class LobbyPage : ComponentBase
         {
             _players = GameService.GetOtherPlayers(GameId, Owner);
             _isMine = GameService.IsMine(GameId, Owner.PlayerId);
-            readyPlayers = GameService.GetReadyPlayers(GameId);
+            _readyPlayers = GameService.GetReadyPlayers(GameId);
         }
     }
 
@@ -128,6 +131,9 @@ public partial class LobbyPage : ComponentBase
 
     public async ValueTask DisposeAsync()
     {
-        await _hubConnection.DisposeAsync();
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync(); 
+        }
     }
 }
