@@ -24,12 +24,13 @@ public partial class LobbyPage : ComponentBase
     [Inject] protected IMatToaster Toaster { get; set; }
     private List<Player>? _players;
     private bool _isMine = false;
-    
+
     protected override async Task OnInitializedAsync()
     {
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(NavigationManager.ToAbsoluteUri("/gameHub"))
             .Build();
+
         _hubConnection.On<Player>(Const.JoinedKey, async (player) =>
         {
             await InvokeAsync(() =>
@@ -47,6 +48,7 @@ public partial class LobbyPage : ComponentBase
                 StateHasChanged();
             });
         });
+
         _hubConnection.On<string>(Const.PlayerReady, async (playerId) =>
         {
             await InvokeAsync(() =>
@@ -54,17 +56,23 @@ public partial class LobbyPage : ComponentBase
                 if (GameId is not null)
                 {
                     readyPlayers = GameService.GetReadyPlayers(GameId);
-                    StateHasChanged(); 
+                    StateHasChanged();
                 }
             });
         });
+
         _hubConnection.On(Const.StartSession, () =>
         {
-            NavigationManager.NavigateTo("/board");
+            NavigationManager.NavigateTo($"/board/{GameId}");
         });
+
         await _hubConnection.StartAsync();
-        await _hubConnection.InvokeAsync(Const.JoinGameGroup, GameId);
+        if(!string.IsNullOrEmpty(GameId))
+{
+            await _hubConnection.InvokeAsync(Const.JoinGameGroup, GameId);
+        }
         await LoadOwnerFromSessionAsync();
+
         if (Owner is null)
         {
             throw new Exception("We can't retrieve user information. Please start again.");
@@ -76,7 +84,7 @@ public partial class LobbyPage : ComponentBase
             readyPlayers = GameService.GetReadyPlayers(GameId);
         }
     }
-    
+
     private async Task LoadOwnerFromSessionAsync()
     {
         try
@@ -116,7 +124,7 @@ public partial class LobbyPage : ComponentBase
     }
 
     private bool IsOwner(string playerId) => GameId is not null && GameService.GetOwnerId(GameId) == playerId;
-    
+
     public async ValueTask DisposeAsync()
     {
         await _hubConnection.DisposeAsync();

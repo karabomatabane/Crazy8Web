@@ -4,7 +4,6 @@ using Crazy8Web.Constants;
 using Crazy8Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
-using static System.Collections.Specialized.BitVector32;
 using Game = Crazy8.Models.Game;
 
 namespace Crazy8Web.Services;

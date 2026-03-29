@@ -12,13 +12,11 @@ namespace Crazy8Web.Pages;
 public partial class StartPage : ComponentBase
 {
     [Inject] private GameService GameService { get; set; }
-    [Inject] private IJSRuntime JSRuntime { get; set; }
     [Inject] private NavigationManager NavigationManager { get; set; }
 
     [Inject] private ProtectedSessionStorage SessionStore { get; set; }
     [Inject] protected IMatToaster Toaster { get; set; }
 
-    private HubConnection _hubConnection;
     private Player? Owner { get; set; }
     private static string? _inputName;
     private bool _isPlayerSetup;
@@ -26,13 +24,9 @@ public partial class StartPage : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri("/gameHub"))
-            .Build();
         _inputName = string.Empty;
         _isPlayerSetup = true;
 
-        await _hubConnection.StartAsync();
         await LoadOwnerFromSessionAsync();
     }
 
@@ -97,10 +91,5 @@ public partial class StartPage : ComponentBase
         if (Owner is not null) _inputName = Owner.Name;
         _isPlayerSetup = true;
         StateHasChanged();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        await _hubConnection.DisposeAsync();
     }
 }

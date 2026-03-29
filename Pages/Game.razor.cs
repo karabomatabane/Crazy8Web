@@ -11,6 +11,7 @@ namespace Crazy8Web.Pages;
 
 public partial class Game : ComponentBase
 {
+    [Parameter]
     public string? GameId { get; set; }
     [Inject] private GameService GameService { get; set; }
     [Inject] private IJSRuntime JSRuntime { get; set; }
@@ -120,6 +121,10 @@ public partial class Game : ComponentBase
         });
 
         await _hubConnection.StartAsync();
+        if (!string.IsNullOrEmpty(GameId))
+        {
+            await _hubConnection.InvokeAsync(Const.JoinGameGroup, GameId);
+        }
         await LoadOwnerFromSessionAsync();
 
         if (Owner == null || GameId == null)
