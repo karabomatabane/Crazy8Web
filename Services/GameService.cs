@@ -113,13 +113,13 @@ public class GameService(IHubContext<GameHub> hubContext)
         session.SuitSelectionTcs = null;
     }
 
-    public bool IsGameRunning(string gameId) => _sessions[gameId].Game.IsRunning;
+    public bool IsGameRunning(string gameId) => GetSession(gameId).Game.IsRunning;
 
     //public string GetGameId() => _game.GameId;
 
     public void StartGame(string gameId)
     {
-        _sessions[gameId].Game.StartGame();
+        GetSession(gameId).Game.StartGame();
     }
 
     public void Rematch(string gameId)
@@ -141,7 +141,11 @@ public class GameService(IHubContext<GameHub> hubContext)
         // preserve ready list, replace only game
         GameSession current = GetSession(gameId);
         current.Game = replacement.Game;
-        current.ReadyPlayers.Clear();
+
+        lock (current.ReadyPlayersGate)
+        {
+            current.ReadyPlayers.Clear();
+        }
 
         _ = _hubContext.Clients.Group(gameId).SendAsync(Const.RematchStarted);
     }
@@ -156,12 +160,12 @@ public class GameService(IHubContext<GameHub> hubContext)
         }
 
         session.Game.AddPlayer(player);
-        _hubContext.Clients.Group(gameId).SendAsync(Const.JoinedKey, player);
+        _ = _hubContext.Clients.Group(gameId).SendAsync(Const.JoinedKey, player);
     }
 
     public Player[] GetPlayers(string gameId)
     {
-        if(_sessions.TryGetValue(gameId, out GameSession? session))
+        if (_sessions.TryGetValue(gameId, out GameSession? session))
         {
             return session.Game.GetPlayers();
         }
@@ -178,22 +182,35 @@ public class GameService(IHubContext<GameHub> hubContext)
         throw new InvalidOperationException("The game ID you entered has no associated game.");
     }
 
-    public List<string> GetReadyPlayers(string gameId) => _sessions[gameId].ReadyPlayers;
+    public List<string> GetReadyPlayers(string gameId)
+    {
+        GameSession session = GetSession(gameId);
+        lock (session.ReadyPlayersGate)
+        {
+            return [.. session.ReadyPlayers];
+        }
+    }
 
     public void PlayerReady(string gameId, string playerId)
     {
         GameSession session = GetSession(gameId);
-        if (!session.ReadyPlayers.Contains(playerId))
+
+        bool added;
+        lock (session.ReadyPlayersGate)
         {
-            session.ReadyPlayers.Add(playerId);
+            added = session.ReadyPlayers.Add(playerId);
         }
-        _hubContext.Clients.Group(gameId).SendAsync(Const.PlayerReady, playerId);
+
+        if (added)
+        {
+            _ = _hubContext.Clients.Group(gameId).SendAsync(Const.PlayerReady, playerId);
+        }
     }
 
     public void StartSession(string gameId)
     {
         GameSession session = GetSession(gameId);
-        _hubContext.Clients.Group(gameId).SendAsync(Const.StartSession);
+        _ = _hubContext.Clients.Group(gameId).SendAsync(Const.StartSession);
         session.Game.Deck.VibeCheckEvent += DeckOnVibeCheckEvent;
     }
 
@@ -210,9 +227,9 @@ public class GameService(IHubContext<GameHub> hubContext)
         return [];
     }
 
-    public string GetOwnerId(string gameId) => _sessions[gameId].Game.Owner;
+    public string GetOwnerId(string gameId) => GetSession(gameId).Game.Owner;
 
-    public bool IsMine(string gameId, string playerId) => _sessions[gameId].Game.Owner == playerId;
+    public bool IsMine(string gameId, string playerId) => GetSession(gameId).Game.Owner == playerId;
 
     public async Task ProgressGame(string gameId, Card? playerChoice)
     {
@@ -234,18 +251,19 @@ public class GameService(IHubContext<GameHub> hubContext)
 
     public void CallOut(string gameId, string playerName, int count)
     {
-        _hubContext.Clients.Group(gameId).SendAsync(Const.CallOut, playerName, count);
+        _ = _hubContext.Clients.Group(gameId).SendAsync(Const.CallOut, playerName, count);
     }
 
-    public Card? GetFaceUp(string gameId) => _sessions[gameId].Game.GetFaceUp();
-    public int GetAttacks(string gameId) => _sessions[gameId].Game.Attacks;
-    public string? GetRequiredSuit(string gameId) => _sessions[gameId].Game.RequiredSuit;
-    public int GetTurn(string gameId) => _sessions[gameId].Game.Turn;
+    public Card? GetFaceUp(string gameId) => GetSession(gameId).Game.GetFaceUp();
+    public int GetAttacks(string gameId) => GetSession(gameId).Game.Attacks;
+    public string? GetRequiredSuit(string gameId) => GetSession(gameId).Game.RequiredSuit;
+    public int GetTurn(string gameId) => GetSession(gameId).Game.Turn;
 }
 
 internal class GameSession
 {
     public Game Game { get; set; } = null!;
-    public List<string> ReadyPlayers { get; set; } = [];
+    public HashSet<string> ReadyPlayers { get; set; } = [];
+    public object ReadyPlayersGate { get; } = new();
     public TaskCompletionSource<string>? SuitSelectionTcs { get; set; } = null!;
 }
