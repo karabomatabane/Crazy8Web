@@ -22,7 +22,7 @@ public partial class LobbyPage : ComponentBase
     [Inject] protected IMatToaster Toaster { get; set; } = null!;
 
     private HubConnection? _hubConnection;
-    private Player? Owner { get; set; }
+    private Player? LocalPlayer { get; set; }
     private List<string>? _readyPlayers;
     
     private List<Player>? _players;
@@ -39,15 +39,15 @@ public partial class LobbyPage : ComponentBase
         {
             await InvokeAsync(() =>
             {
-                if (Owner is null)
+                if (LocalPlayer is null)
                 {
                     throw new Exception("We can't retrieve user information. Please start again.");
                 }
 
                 if (GameId is not null)
                 {
-                    _players = GameService.GetOtherPlayers(GameId, Owner);
-                    _isMine = GameService.IsMine(GameId, Owner.PlayerId);
+                    _players = GameService.GetOtherPlayers(GameId, LocalPlayer);
+                    _isMine = GameService.IsGameCreator(GameId, LocalPlayer.PlayerId);
                 }
                 StateHasChanged();
             });
@@ -77,14 +77,14 @@ public partial class LobbyPage : ComponentBase
         }
         await LoadOwnerFromSessionAsync();
 
-        if (Owner is null)
+        if (LocalPlayer is null)
         {
             throw new Exception("We can't retrieve user information. Please start again.");
         }
         if (GameId is not null)
         {
-            _players = GameService.GetOtherPlayers(GameId, Owner);
-            _isMine = GameService.IsMine(GameId, Owner.PlayerId);
+            _players = GameService.GetOtherPlayers(GameId, LocalPlayer);
+            _isMine = GameService.IsGameCreator(GameId, LocalPlayer.PlayerId);
             _readyPlayers = GameService.GetReadyPlayers(GameId);
         }
     }
@@ -93,9 +93,9 @@ public partial class LobbyPage : ComponentBase
     {
         try
         {
-            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(Const.OwnerKey);
-            Owner = result.Value;
-            if (Owner is not null)
+            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(Const.LocalPlayerKey);
+            LocalPlayer = result.Value;
+            if (LocalPlayer is not null)
             {
                 StateHasChanged(); // Force re-render to update UI
             }
@@ -108,7 +108,7 @@ public partial class LobbyPage : ComponentBase
 
     private void Start()
     {
-        if (Owner is null || GameId is null)
+        if (LocalPlayer is null || GameId is null)
             return;
         if (_isMine)
         {
@@ -116,7 +116,7 @@ public partial class LobbyPage : ComponentBase
         }
         else
         {
-            GameService.PlayerReady(GameId, Owner.PlayerId);
+            GameService.PlayerReady(GameId, LocalPlayer.PlayerId);
         }
     }
 

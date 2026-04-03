@@ -5,36 +5,16 @@
     padding: 2rem;
     min-height: 65vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 }
 
 /* Player Form Styles */
-.player-form {
+
+.dark-card {
+    padding-bottom: .5rem;
+    max-width: 370px;
     width: 100%;
-    max-width: 500px;
-}
-
-.form-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
-}
-
-.form-title {
-    color: #333;
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-
-.name-input {
-    margin-bottom: 1.5rem;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: center;
 }
 
 .primary-button {
@@ -72,6 +52,7 @@
 .welcome-screen {
     width: 100%;
     text-align: center;
+    align-self: flex-end;
 }
 
 .welcome-header {

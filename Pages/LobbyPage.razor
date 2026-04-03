@@ -64,7 +64,7 @@
                     <Button 
                                Class="action-button primary"
                                @onclick="Start">
-                        @(Owner?.PlayerId != null && _readyPlayers.Contains(Owner.PlayerId) ? "Waiting..." : "Ready")
+                        @(LocalPlayer?.PlayerId != null && _readyPlayers.Contains(LocalPlayer.PlayerId) ? "Waiting..." : "Ready")
                     </Button>   
                 }
             </div>

@@ -30,9 +30,9 @@ public class Game
     public Player[] Players { get; private set; }
 
     /// <summary>
-    /// Player ID of the game owner/creator
+    /// Player ID of the user who created the game
     /// </summary>
-    public string Owner { get; set; }
+    public string GameCreatorId { get; set; }
 
     /// <summary>
     /// The deck of cards used in the game
@@ -105,7 +105,7 @@ public class Game
     {
         GameId = gameId ?? Guid.NewGuid().ToString();
         Players = [owner];
-        Owner = owner.PlayerId;
+        GameCreatorId = owner.PlayerId;
         SpecialCards = specialCards;
         Round = 0;
         TotalRounds = Players.Length - 1;
@@ -118,7 +118,7 @@ public class Game
     {
         GameId = gameId ?? Guid.NewGuid().ToString();
         Players = players;
-        Owner = players[0].PlayerId;
+        GameCreatorId = players[0].PlayerId;
         SpecialCards = specialCards;
         Round = 0;
         TotalRounds = Players.Length - 1;

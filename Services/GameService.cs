@@ -227,9 +227,9 @@ public class GameService(IHubContext<GameHub> hubContext)
         return [];
     }
 
-    public string GetOwnerId(string gameId) => GetSession(gameId).Game.Owner;
+    public string GetOwnerId(string gameId) => GetSession(gameId).Game.GameCreatorId;
 
-    public bool IsMine(string gameId, string playerId) => GetSession(gameId).Game.Owner == playerId;
+    public bool IsGameCreator(string gameId, string playerId) => GetSession(gameId).Game.GameCreatorId == playerId;
 
     public async Task ProgressGame(string gameId, Card? playerChoice)
     {
@@ -243,15 +243,16 @@ public class GameService(IHubContext<GameHub> hubContext)
         }
     }
 
-    public void PenalisePlayer(string gameId, string playerId)
+    public void PenalisePlayer(string gameId, string playerId, string playerName)
     {
-        GameSession session = GetSession(gameId);
-        session.Game.PenalisePlayer(playerId);
+        Game game = GetSession(gameId).Game;
+        game.PenalisePlayer(playerId);
+        _ = _hubContext.Clients.Group(gameId).SendAsync(Const.PenaltyApplied, playerId, playerName);
     }
 
-    public void CallOut(string gameId, string playerName, int count)
+    public void CallOut(string gameId, string callerPlayerId, string playerName, int count)
     {
-        _ = _hubContext.Clients.Group(gameId).SendAsync(Const.CallOut, playerName, count);
+        _ = _hubContext.Clients.Group(gameId).SendAsync(Const.CallOut, callerPlayerId, playerName, count);
     }
 
     public Card? GetFaceUp(string gameId) => GetSession(gameId).Game.GetFaceUp();

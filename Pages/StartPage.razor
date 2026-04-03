@@ -1,61 +1,94 @@
 ﻿@page "/start"
+@using System.ComponentModel.DataAnnotations
 <div class="start-container">
+    <AuthorizeView Context="authState">
+        <NotAuthorized>
+            <div class="dark-container">
+                <div class="dark-card">
+                    <div class="status-header no-margin-tb">
+                        <h3 class="join-title">@(_isRegisterMode ? "Register" : "Sign In")</h3>
+                    </div>
+                    <div class="status-divider mb-4"></div>
 
-    @if (_isPlayerSetup || Owner is null)
-    {
-        <div class="dark-container">
-            <div class="dark-card">
-                <div class="status-header no-margin-tb">
-                    <h3 class="join-title">Player Setup</h3>
-                    <div class="status-divider"></div>
-                    <p class="instruction-text mt-4">Enter your name below:</p>
+                    <div class="dark-input-group">
+                        @if (_isRegisterMode)
+                        {
+                            @if (RegisterError == 1)
+                            {
+                                <div class="validation-message mb-2">Passwords do not match.</div>
+                            }
+                            else if (RegisterError == 2)
+                            {
+                                <div class="validation-message mb-2">Please enter valid registration details.</div>
+                            }
+                            else if (RegisterError == 3)
+                            {
+                                <div class="validation-message mb-2">Unable to register with those details.</div>
+                            }
+                            <form method="post" action="/auth/register">
+                                <input type="text" name="username" class="dark-code-input" placeholder="Username" required minlength="3" autocomplete="username" value="@RegisterUsername" />
+                                <input type="email" name="email" class="dark-code-input" placeholder="Email" required autocomplete="email" value="@RegisterEmail" />
+                                <input type="password" name="password" class="dark-code-input" placeholder="Password" required minlength="6" autocomplete="new-password" />
+                                <input type="password" name="confirmPassword" class="dark-code-input" placeholder="Confirm password" required minlength="6" autocomplete="new-password" />
+                                <button class="dark-button mt-4" type="submit">Submit</button>
+                            </form>
+                        }
+                        else
+                        {
+                            @if (LoginError == 1)
+                            {
+                                <div class="validation-message mb-2">Invalid credentials.</div>
+                            }
+                            else if (LoginError == 2)
+                            {
+                                <div class="validation-message mb-2">Please enter a valid email and password.</div>
+                            }
+                            <form method="post" action="/auth/login" novalidate>
+                                <input type="email" name="email" class="dark-code-input" placeholder="Email" required autocomplete="email" />
+                                <input type="password" name="password" class="dark-code-input mb-4" placeholder="Password" required autocomplete="current-password" />
+                                <button class="dark-button" type="submit">Submit</button>
+                            </form>
+                        }
+
+                        <button class="dark-button secondary mb-4" @onclick="ToggleMode">
+                            @(_isRegisterMode ? "Have an account? Sign In" : "Need an account? Register")
+                        </button>
+                    </div>
                 </div>
-                <div class="dark-input-group">
-                    <input
-                        type="text"
-                        class="dark-code-input"
-                        @bind-value="@_inputName"
-                        @onkeyup="HandleKeyUp"
-                        placeholder="Your name"/>
-                    <button
-                        disabled="@string.IsNullOrEmpty(_inputName)"
-                        class="dark-button" @onclick="CreatePlayer">
-                        Continue
+            </div>
+        </NotAuthorized>
+        <Authorized>
+            <div class="welcome-screen">
+                <div class="welcome-header">
+                    <MatH3 class="welcome-title">Welcome back, <span class="player-name">@(authState.User.Identity?.Name ?? "Unknown player")</span></MatH3>
+                    <p class="instruction-text">What would you like to do today?</p>
+                </div>
+
+                <div class="action-buttons">
+                    <button Raised="true" Class="action-button" @onclick="CreateGame">
+                        <span class="button-icon">
+                            <MatIcon Icon="videogame_asset"></MatIcon>
+                        </span>
+                        <span>Create New Game</span>
                     </button>
+
+                    <button Raised="true" Class="action-button" @onclick="PrepareToJoin">
+                        <span class="button-icon">
+                            <MatIcon Icon="group"></MatIcon>
+                        </span>
+                        <span>Join Existing Game</span>
+                    </button>
+
+                    <form method="post" action="/auth/logout">
+                        <button class="action-button secondary" type="submit">
+                            <span class="button-icon">
+                                <MatIcon Icon="logout"></MatIcon>
+                            </span>
+                            <span>Logout</span>
+                        </button>
+                    </form>
                 </div>
             </div>
-        </div>
-    }
-    else
-    {
-        <div class="welcome-screen">
-            <div class="welcome-header">
-                <MatH3 class="welcome-title">Welcome back, <span class="player-name">@Owner.Name</span></MatH3>
-                <p class="instruction-text">What would you like to do today?</p>
-            </div>
-
-            <div class="action-buttons">
-                <button Raised="true" Class="action-button" @onclick="CreateGame">
-                    <span class="button-icon">
-                        <MatIcon Icon="videogame_asset"></MatIcon>
-                    </span>
-                    <span>Create New Game</span>
-                </button>
-
-                <button Raised="true" Class="action-button" @onclick="PrepareToJoin">
-                    <span class="button-icon">
-                        <MatIcon Icon="group"></MatIcon>
-                    </span>
-                    <span>Join Existing Game</span>
-                </button>
-
-                <button Raised="true" Class="action-button secondary" @onclick="EditName">
-                    <span class="button-icon">
-                        <MatIcon Icon="edit"></MatIcon>
-                    </span>
-                    <span>Change Name</span>
-                </button>
-            </div>
-        </div>
-    }
+        </Authorized>
+    </AuthorizeView>
 </div>

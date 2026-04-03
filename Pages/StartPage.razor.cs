@@ -1,44 +1,92 @@
 ﻿using Crazy8.Models;
+using Crazy8Web.Constants;
+using Crazy8Web.Data.Entities;
 using Crazy8Web.Services;
 using MatBlazor;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.JSInterop;
+using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 
 namespace Crazy8Web.Pages;
 
-public partial class StartPage : ComponentBase
+public partial class StartPage : ComponentBase, IDisposable
 {
     [Inject] private GameService GameService { get; set; } = null!;
+    [Inject] private HttpClient Http { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
     [Inject] private ProtectedSessionStorage SessionStore { get; set; } = null!;
     [Inject] protected IMatToaster Toaster { get; set; } = null!;
 
-    private Player? Owner { get; set; }
+    [SupplyParameterFromForm]
+    public AuthModel Model { get; set; } = null!;
+
+    [SupplyParameterFromQuery]
+    public int? LoginError { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? RegisterError { get; set; }
+
+    [SupplyParameterFromQuery(Name = "registerUsername")]
+    public string? RegisterUsername { get; set; }
+
+    [SupplyParameterFromQuery(Name = "registerEmail")]
+    public string? RegisterEmail { get; set; }
+
+    private EditContext? editContext;
+    private ValidationMessageStore? messageStore;
+    private Player? LocalPlayer { get; set; }
     private static string? _inputName;
-    private bool _isPlayerSetup;
-    private const string OwnerKey = "owner";
+    private bool _canSubmit;
+    private bool _showRegisterValidation;
+
+    private bool _isRegisterMode;
+
 
     protected override async Task OnInitializedAsync()
     {
         _inputName = string.Empty;
-        _isPlayerSetup = true;
+        Model ??= new();
+        editContext = new(Model);
+        messageStore = new(editContext);
+
+        editContext.OnFieldChanged += HandleFieldChanged;
 
         await LoadOwnerFromSessionAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (RegisterError.HasValue)
+        {
+            _isRegisterMode = true;
+        }
+    }
+
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        _canSubmit = editContext?.Validate() == true;
+        StateHasChanged();
+    }
+
+    private bool ShouldShow<T>(Expression<Func<T>> accessor)
+    {
+        var field = FieldIdentifier.Create(accessor);
+        return _showRegisterValidation || (editContext?.IsModified(field) ?? false);
     }
 
     private async Task LoadOwnerFromSessionAsync()
     {
         try
         {
-            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(OwnerKey);
-            Owner = result.Value;
-            if (Owner is not null)
+            ProtectedBrowserStorageResult<Player> result = await SessionStore
+                .GetAsync<Player>(Const.LocalPlayerKey);
+            LocalPlayer = result.Value;
+            if (LocalPlayer is not null)
             {
-                _isPlayerSetup = false;
                 StateHasChanged(); // Force re-render to update UI
             }
         }
@@ -48,48 +96,46 @@ public partial class StartPage : ComponentBase
         }
     }
 
+    private void ToggleMode()
+    {
+        _isRegisterMode = !_isRegisterMode;
+    }
+
     private void PrepareToJoin()
     {
         // TODO: Use game id to add player to a game
-        if (Owner is null) return;
-        NavigationManager.NavigateTo($"/join/{Owner.PlayerId}");
+        if (LocalPlayer is null) return;
+        NavigationManager.NavigateTo($"/join/{LocalPlayer.PlayerId}");
     }
 
 
     private void CreateGame()
     {
-        if (Owner is null) return;
-        NavigationManager.NavigateTo($"lobby/{GameService.CreateGame(Owner)}");
+        if (LocalPlayer is null) return;
+        NavigationManager.NavigateTo($"lobby/{GameService.CreateGame(LocalPlayer)}");
     }
 
     private async Task CreatePlayer()
     {
-        if (string.IsNullOrEmpty(_inputName)) return;
-        if (Owner is null)
+        if (string.IsNullOrWhiteSpace(_inputName)) return;
+
+        string name = _inputName.Trim();
+
+        if (LocalPlayer is null)
         {
-            Owner = new Player(_inputName);
+            LocalPlayer = new Player(name);
         }
         else
         {
-            Owner.Name = _inputName;
-            _isPlayerSetup = false;
-            StateHasChanged();
+            LocalPlayer.Name = name;
         }
-        await SessionStore.SetAsync(OwnerKey, Owner);
-    }
-    
-    private async Task HandleKeyUp(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" && !string.IsNullOrEmpty(_inputName))
-        {
-            await CreatePlayer();
-        }
+
+        await SessionStore.SetAsync(Const.LocalPlayerKey, LocalPlayer);
+        StateHasChanged();
     }
 
-    private void EditName()
+    public void Dispose()
     {
-        if (Owner is not null) _inputName = Owner.Name;
-        _isPlayerSetup = true;
-        StateHasChanged();
+        editContext?.OnFieldChanged -= HandleFieldChanged;
     }
 }

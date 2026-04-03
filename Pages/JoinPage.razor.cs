@@ -15,7 +15,7 @@ public partial class JoinPage : ComponentBase
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
     private static string? _joiningId;
-    private Player? Owner { get; set; }
+    private Player? LocalPlayer { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -27,9 +27,9 @@ public partial class JoinPage : ComponentBase
     {
         try
         {
-            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(Const.OwnerKey);
-            Owner = result.Value;
-            if (Owner != null)
+            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(Const.LocalPlayerKey);
+            LocalPlayer = result.Value;
+            if (LocalPlayer != null)
             {
                 StateHasChanged(); // Force re-render to update UI
             }
@@ -43,8 +43,8 @@ public partial class JoinPage : ComponentBase
 
     private void JoinGame()
     {
-        if (Owner == null || string.IsNullOrEmpty(_joiningId)) return;
-        GameService.JoinGame(Owner, _joiningId);
+        if (LocalPlayer == null || string.IsNullOrEmpty(_joiningId)) return;
+        GameService.JoinGame(LocalPlayer, _joiningId);
         NavigationManager.NavigateTo($"lobby/{_joiningId}");
     }
 

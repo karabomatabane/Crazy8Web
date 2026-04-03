@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.5.11619.145 insiders
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crazy8Web", "Crazy8Web.csproj", "{7C272C28-AEA9-4BFB-8FF9-A55D0F740545}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine", "Engine\Engine.csproj", "{959536CD-EA2D-4B79-817A-9CB97E1F0D2F}"
@@ -23,5 +26,11 @@ Global
 		{67650661-7F46-46C8-9422-02A7D45693D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{67650661-7F46-46C8-9422-02A7D45693D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{67650661-7F46-46C8-9422-02A7D45693D4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1D79FB07-B2EC-44A7-8915-697C3ACCD69F}
 	EndGlobalSection
 EndGlobal

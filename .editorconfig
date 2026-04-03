@@ -2,4 +2,10 @@ root = true
 
 [*]
 end_of_line = lf
+guidelines = 90
+
+# C# or VB files
+[*.{cs,vb}]
+guidelines = 100
+
 

@@ -18,7 +18,10 @@ public partial class Game : ComponentBase
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private ProtectedSessionStorage SessionStore { get; set; } = null!;
     [Inject] protected IMatToaster Toaster { get; set; } = null!;
-    private Player? Owner { get; set; }
+    /// <summary>
+    /// Gets or sets the player instance representing the local user.
+    /// </summary>
+    private Player? LocalPlayer { get; set; }
 
     private HubConnection? _hubConnection;
     private Player? _turn;
@@ -66,8 +69,8 @@ public partial class Game : ComponentBase
             {
                 _players = [.. GameService.GetPlayers(GameId)];
                 _turn = _players?.FirstOrDefault(p => p.PlayerId == playerId);
-                if (Owner != null)
-                    _myCards = GameService.GetPlayerCards(GameId, Owner.PlayerId);
+                if (LocalPlayer != null)
+                    _myCards = GameService.GetPlayerCards(GameId, LocalPlayer.PlayerId);
                 _choice = 0;
                 _tempChoice = null;
                 _attacks = GameService.GetAttacks(GameId);
@@ -99,26 +102,55 @@ public partial class Game : ComponentBase
             });
         });
 
-        _hubConnection.On(Const.RematchClicked, () =>
+        _hubConnection.On(Const.RematchClicked, async () =>
         {
-            _rematchCount++;
-            if (_rematchCount == _players.Count && Owner != null && GameId != null && GameService.IsMine(GameId, Owner.PlayerId))
+            await InvokeAsync(() =>
             {
-                GameService.RestartGame(GameId, _players);
-            }
+                _rematchCount++;
+                if (_rematchCount == _players.Count && LocalPlayer != null && GameId != null && GameService.IsGameCreator(GameId, LocalPlayer.PlayerId))
+                {
+                    GameService.RestartGame(GameId, _players);
+                }
+            });
         });
         
        
         
-        _hubConnection.On<string, int>(Const.CallOut, (playerName, count) =>
+        _hubConnection.On<string, string, int>(Const.CallOut, async (callerPlayerId, playerName, count) =>
         {
-            Toaster.Add($"{playerName} has {count} cards!", MatToastType.Info, "Call Out");
-            StateHasChanged();
+            await InvokeAsync(() =>
+            {
+                // Do not show the call-out toaster to the player who triggered it.
+                if (LocalPlayer is not null && string.Equals(LocalPlayer.PlayerId, callerPlayerId, StringComparison.Ordinal))
+                {
+                    return;
+                }
+
+                Toaster.Add($"{playerName} has {count} cards!", MatToastType.Info, "Call Out");
+                StateHasChanged();
+            });
         });
 
-        _hubConnection.On(Const.RematchStarted, () =>
+        _hubConnection.On<string, string>(Const.PenaltyApplied, async (penalisedPlayerId, penalisedPlayerName) =>
         {
-            NavigationManager.NavigateTo($"/board/{GameId}", true);
+            await InvokeAsync(() =>
+            {
+                if (LocalPlayer is not null && string.Equals(LocalPlayer.PlayerId, penalisedPlayerId, StringComparison.Ordinal))
+                {
+                    Toaster.Add("You have been penalised.", MatToastType.Warning, "Penalty");
+                }
+                else
+                {
+                    Toaster.Add($"{penalisedPlayerName} has been penalised.", MatToastType.Warning, "Penalty");
+                }
+
+                StateHasChanged();
+            });
+        });
+
+        _hubConnection.On(Const.RematchStarted, async () =>
+        {
+            await InvokeAsync(() => NavigationManager.NavigateTo($"/board/{GameId}", true));
         });
 
         await _hubConnection.StartAsync();
@@ -128,7 +160,7 @@ public partial class Game : ComponentBase
         }
         await LoadOwnerFromSessionAsync();
 
-        if (Owner is null || GameId is null)
+        if (LocalPlayer is null || GameId is null)
         {
             _myCards = [];
             return;
@@ -137,12 +169,12 @@ public partial class Game : ComponentBase
         _players = [.. GameService.GetPlayers(GameId)];
         
 
-        if (!GameService.IsGameRunning(GameId) && GameService.IsMine(GameId, Owner.PlayerId))
+        if (!GameService.IsGameRunning(GameId) && GameService.IsGameCreator(GameId, LocalPlayer.PlayerId))
         {
             GameService.StartGame(GameId);
         }
 
-        _myCards = GameService.GetPlayerCards(GameId, Owner.PlayerId);
+        _myCards = GameService.GetPlayerCards(GameId, LocalPlayer.PlayerId);
         if (GameService.IsGameRunning(GameId))
         {
             _faceUp = GameService.GetFaceUp(GameId);
@@ -164,9 +196,9 @@ public partial class Game : ComponentBase
     {
         try
         {
-            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(Const.OwnerKey);
-            Owner = result.Value;
-            if (Owner != null)
+            ProtectedBrowserStorageResult<Player> result = await SessionStore.GetAsync<Player>(Const.LocalPlayerKey);
+            LocalPlayer = result.Value;
+            if (LocalPlayer != null)
             {
                 StateHasChanged(); // Force re-render to update UI
             }
@@ -175,12 +207,6 @@ public partial class Game : ComponentBase
         {
             Console.WriteLine(e);
         }
-    }
-
-    private void PromptPlayerForSuit(string defaultSuit)
-    {
-        _dialogSuit = defaultSuit;
-        _dialogIsOpen = true && IsMyTurn();
     }
 
     private void OkClick()
@@ -194,9 +220,9 @@ public partial class Game : ComponentBase
 
     private string GetPlayerName(Player player)
     {
-        if (Owner != null)
+        if (LocalPlayer != null)
         {
-            return player.PlayerId == Owner.PlayerId ? "You" : player.Name;
+            return player.PlayerId == LocalPlayer.PlayerId ? "You" : player.Name;
         }
 
         return "";
@@ -204,8 +230,8 @@ public partial class Game : ComponentBase
 
     private bool IsMyTurn()
     {
-        if (Owner != null && _turn != null)
-            return _turn.PlayerId == Owner.PlayerId;
+        if (LocalPlayer != null && _turn != null)
+            return _turn.PlayerId == LocalPlayer.PlayerId;
         return false;
     }
 
@@ -286,15 +312,19 @@ public partial class Game : ComponentBase
     private void PenaliseForCardNumber(string playerId)
     {
         // TODO: Use _callOuts to decide if player must be penalised.
-        if (_players.First(p => p.PlayerId == playerId).HasCalledOutThisTurn || GameId is null) return;
-        GameService.PenalisePlayer(GameId, playerId);
+        if (GameId is null) return;
+
+        Player? player = _players.FirstOrDefault(p => p.PlayerId == playerId);
+        if (player is null || player.HasCalledOutThisTurn) return;
+
+        GameService.PenalisePlayer(GameId, playerId, player.Name);
     }
 
     private void AnnounceCardCount()
     {
         UpdateHasCalledOut(true);
-        if (Owner is null || GameId is null) return;
-        GameService.CallOut(GameId, Owner.Name, _myCards?.Length ?? 0);
+        if (LocalPlayer is null || GameId is null) return;
+        GameService.CallOut(GameId, LocalPlayer.PlayerId, LocalPlayer.Name, _myCards?.Length ?? 0);
     }
 
     private void Rematch()
@@ -308,22 +338,22 @@ public partial class Game : ComponentBase
 
     private void LeaveGame()
     {
-        if (Owner is null || GameId is null || _hubConnection is null) return;
+        if (LocalPlayer is null || GameId is null || _hubConnection is null) return;
         _hubConnection.InvokeAsync(Const.LeaveGameGroup, GameId);
-        _players.RemoveAll(p => p.PlayerId == Owner.PlayerId);
+        _players.RemoveAll(p => p.PlayerId == LocalPlayer.PlayerId);
         // Navigate to the home page
         NavigationManager.NavigateTo("/");
     }
 
     private void UpdateHasCalledOut(bool value)
     {
-        if (Owner is null) return;
-        int index = _players.FindIndex(p => p.PlayerId == Owner.PlayerId);
+        if (LocalPlayer is null) return;
+        int index = _players.FindIndex(p => p.PlayerId == LocalPlayer.PlayerId);
         if (index < 0)
         {
             throw new InvalidOperationException("Owner is not in the game!");
         }
         _players[index].HasCalledOutThisTurn = value;
-        Owner.HasCalledOutThisTurn = value;
+        LocalPlayer.HasCalledOutThisTurn = value;
     }
 }

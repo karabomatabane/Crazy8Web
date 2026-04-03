@@ -145,16 +145,16 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 80vh;
     padding: 1rem;
+    width: 100%;
 }
 
 .dark-card {
     background-color: #1e1e2d;
     border-radius: 12px;
-    padding: 2rem;
+    padding: 2rem 3rem;
     width: 100%;
-    max-width: 500px;
+    max-width: 800px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -324,10 +324,18 @@ main {
 }
 
 /*Forms*/
-.dark-input-group {
+.dark-input-group form {
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: .5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark-input-group button {
+    width: 100%;
+    padding: .5rem 1.4rem;
 }
 
 .dark-code-input {
@@ -338,11 +346,19 @@ main {
     border-radius: 4px;
     color: #e0e0e0;
     font-size: 1rem;
+    width: 100%;
 }
 
 .dark-code-input:focus {
     outline: none;
     border-color: #7c4dff;
+}
+
+.validation-message {
+    text-align: start !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    font-size: 12px;
 }
 
 .dark-button {

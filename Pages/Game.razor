@@ -3,7 +3,7 @@
 @using Crazy8.Constants
 @using Crazy8Web.Utils
 <div class="container">
-    @if (Owner != null)
+    @if (LocalPlayer != null)
     {
         <div class="chips-container">
             <div class="player-chips">
@@ -12,7 +12,7 @@
                     <div @onclick="() => PenaliseForCardNumber(player.PlayerId)" class="player-chip @(player == _turn ? "active-player-chip" : "") @(player.Hand?.Length is < 4 and > 0 ? "can-click" : "")">
                         <span class="material-icons icon leading-icon">person</span>
                         <span class="player-name">@GetPlayerName(player)</span>
-                        @if (player.PlayerId != Owner?.PlayerId)
+                        @if (player.PlayerId != LocalPlayer?.PlayerId)
                         {
                             <span class="card-count-badge">@(player.Hand?.Length ?? 0)</span>
                         }
@@ -20,7 +20,7 @@
                 }
             </div>
             <div class="right-chips">
-                @if (_myCards.Length <= 3 && Owner?.HasCalledOutThisTurn == false)
+                @if (_myCards.Length <= 3 && LocalPlayer?.HasCalledOutThisTurn == false)
                 {
                     <div class="status-chip anim-chip can-click" @onclick="AnnounceCardCount">
                         <span class="material-icons icon">volume_up</span>
@@ -134,7 +134,7 @@
                         int rank = i + 1;
                         <li class="result-item @(rank == 1 ? "highlight-first" : "")">
                             <span class="rank">@(rank).</span>
-                            <span class="player-name">@(player.PlayerId == Owner?.PlayerId ? "You" : player.Name)</span>
+                            <span class="player-name">@(player.PlayerId == LocalPlayer?.PlayerId ? "You" : player.Name)</span>
                             @if (rank == 1)
                             {
                                 <span class="winner-icon">🏆</span>
