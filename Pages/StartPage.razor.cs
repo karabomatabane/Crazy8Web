@@ -4,6 +4,7 @@ using Crazy8Web.Data.Entities;
 using Crazy8Web.Services;
 using MatBlazor;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.Components.Web;
@@ -20,6 +21,7 @@ public partial class StartPage : ComponentBase, IDisposable
 
     [Inject] private ProtectedSessionStorage SessionStore { get; set; } = null!;
     [Inject] protected IMatToaster Toaster { get; set; } = null!;
+    [Inject] protected AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
 
     [SupplyParameterFromForm]
     public AuthModel Model { get; set; } = null!;
@@ -101,25 +103,35 @@ public partial class StartPage : ComponentBase, IDisposable
         _isRegisterMode = !_isRegisterMode;
     }
 
-    private void PrepareToJoin()
+    private async void PrepareToJoin()
     {
         // TODO: Use game id to add player to a game
-        if (LocalPlayer is null) return;
-        NavigationManager.NavigateTo($"/join/{LocalPlayer.PlayerId}");
+        if (LocalPlayer is null)
+        {
+            await CreatePlayer();
+        }
+        NavigationManager.NavigateTo($"/join/{LocalPlayer!.PlayerId}");
     }
 
 
-    private void CreateGame()
+    private async void CreateGame()
     {
-        if (LocalPlayer is null) return;
-        NavigationManager.NavigateTo($"lobby/{GameService.CreateGame(LocalPlayer)}");
+        if (LocalPlayer is null)
+        {
+            await CreatePlayer();
+        }
+        NavigationManager.NavigateTo($"lobby/{GameService.CreateGame(LocalPlayer!)}");
     }
 
     private async Task CreatePlayer()
     {
-        if (string.IsNullOrWhiteSpace(_inputName)) return;
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState is null) return;
+        var user = authState.User;
+        string? username = user.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(username)) return;
 
-        string name = _inputName.Trim();
+        string name = username.Trim();
 
         if (LocalPlayer is null)
         {
